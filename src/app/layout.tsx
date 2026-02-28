@@ -20,6 +20,10 @@ export const metadata: Metadata = {
   title: "Eid Chanda — Digital Eid Experience",
   description:
     "Create Salami Request Cards, send Digital Khām, and save memories in your Eid Archive.",
+  icons: {
+    icon: "/icon.png",
+    apple: "/icon.png",
+  },
 };
 
 import { ToastProvider } from "@/components/ToastContext";
