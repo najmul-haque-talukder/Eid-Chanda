@@ -61,7 +61,9 @@ export function EidInsightDashboard() {
 
     return (
         <div className="mt-8">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Eid Insights Dashboard 📊</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                Eid Insights Dashboard <i className="fa-solid fa-chart-line text-primary text-sm"></i>
+            </h2>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 text-center">
                     <p className="text-sm text-gray-500 mb-1">Total Sent</p>
