@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ToastContext";
+import { useEffect, useRef } from "react";
 
 export function SendKhamForm({ senderId, senderProfile }: { senderId: string, senderProfile: any }) {
   const router = useRouter();
@@ -13,6 +13,7 @@ export function SendKhamForm({ senderId, senderProfile }: { senderId: string, se
   const [allUsers, setAllUsers] = useState<any[]>([]);
   const [page, setPage] = useState(0);
   const [loadingUsers, setLoadingUsers] = useState(false);
+  const searchTimeoutRef = useRef<any>(null);
   const USERS_PER_PAGE = 5;
 
   // Form state
@@ -28,7 +29,7 @@ export function SendKhamForm({ senderId, senderProfile }: { senderId: string, se
   const [sending, setSending] = useState(false);
 
   // Fetch all users on mount
-  useState(() => {
+  useEffect(() => {
     async function fetchAllUsers() {
       setLoadingUsers(true);
       const supabase = createClient();
@@ -43,7 +44,7 @@ export function SendKhamForm({ senderId, senderProfile }: { senderId: string, se
       setLoadingUsers(false);
     }
     fetchAllUsers();
-  });
+  }, [senderId]);
 
   // Re-fetch on page change
   const fetchPage = async (p: number) => {
@@ -64,20 +65,27 @@ export function SendKhamForm({ senderId, senderProfile }: { senderId: string, se
   async function handleSearch(e: React.ChangeEvent<HTMLInputElement>) {
     const query = e.target.value;
     setSearchQuery(query);
+
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+
     if (!query.trim()) {
       setSearchResults([]);
+      setSearching(false);
       return;
     }
+
     setSearching(true);
-    const supabase = createClient();
-    const { data } = await supabase
-      .from("profiles")
-      .select("id, username, full_name, avatar_url")
-      .ilike("username", `%${query}%`)
-      .neq("id", senderId)
-      .limit(5);
-    setSearchResults(data || []);
-    setSearching(false);
+    searchTimeoutRef.current = setTimeout(async () => {
+      const supabase = createClient();
+      const { data } = await supabase
+        .from("profiles")
+        .select("id, username, full_name, avatar_url")
+        .ilike("username", `%${query}%`)
+        .neq("id", senderId)
+        .limit(5);
+      setSearchResults(data || []);
+      setSearching(false);
+    }, 400); // 400ms debounce
   }
 
   async function sendCard(e: React.FormEvent) {
@@ -231,7 +239,7 @@ export function SendKhamForm({ senderId, senderProfile }: { senderId: string, se
               >
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-cream shrink-0 overflow-hidden">
-                    <img src={user.avatar_url || "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png"} className="w-full h-full object-cover" />
+                    <img src={user.avatar_url || "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png"} className="w-full h-full object-cover" loading="lazy" />
                   </div>
                   <div>
                     <p className="font-bold text-gray-900">{user.full_name || "No name"}</p>
@@ -263,7 +271,7 @@ export function SendKhamForm({ senderId, senderProfile }: { senderId: string, se
                 >
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-full bg-cream shrink-0 overflow-hidden border-2 border-primary/5">
-                      <img src={user.avatar_url || "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png"} className="w-full h-full object-cover" />
+                      <img src={user.avatar_url || "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png"} className="w-full h-full object-cover" loading="lazy" />
                     </div>
                     <div>
                       <p className="font-bold text-gray-900">{user.full_name || "No name"}</p>

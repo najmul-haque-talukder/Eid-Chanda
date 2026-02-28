@@ -58,10 +58,6 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         localStorage.setItem("eid_lang", newLang);
     };
 
-    if (!mounted) {
-        return <div className="min-h-screen bg-cream"></div>;
-    }
-
     return (
         <LanguageContext.Provider value={{ lang, setLang, t: translations[lang] }}>
             {children}

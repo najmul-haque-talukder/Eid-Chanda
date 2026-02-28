@@ -13,7 +13,12 @@ export default async function HomePage() {
   return (
     <main className="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-br from-cream to-white overflow-hidden relative">
 
-      {/* Background Decorative Elements - Removed for Performance */}
+      {/* Background Decorative Elements */}
+      <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-40">
+        <div className="absolute top-10 left-10 w-64 h-64 bg-primary/5 rounded-full blur-[100px]" />
+        <div className="absolute bottom-10 right-10 w-96 h-96 bg-primary/10 rounded-full blur-[120px]" />
+        <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(#e2136e 0.5px, transparent 0.5px)', backgroundSize: '30px 30px', opacity: 0.1 }} />
+      </div>
 
       <div className="max-w-3xl text-center space-y-10 z-10 font-bangla">
 
