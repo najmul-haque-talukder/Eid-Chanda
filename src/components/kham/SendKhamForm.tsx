@@ -10,6 +10,10 @@ export function SendKhamForm({ senderId, senderProfile }: { senderId: string, se
   const { showToast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [allUsers, setAllUsers] = useState<any[]>([]);
+  const [page, setPage] = useState(0);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const USERS_PER_PAGE = 5;
 
   // Form state
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
@@ -22,6 +26,40 @@ export function SendKhamForm({ senderId, senderProfile }: { senderId: string, se
   // Status
   const [searching, setSearching] = useState(false);
   const [sending, setSending] = useState(false);
+
+  // Fetch all users on mount
+  useState(() => {
+    async function fetchAllUsers() {
+      setLoadingUsers(true);
+      const supabase = createClient();
+      const { data } = await supabase
+        .from("profiles")
+        .select("id, username, full_name, avatar_url")
+        .neq("id", senderId)
+        .order("username", { ascending: true })
+        .range(page * USERS_PER_PAGE, (page + 1) * USERS_PER_PAGE - 1);
+
+      if (data) setAllUsers(data);
+      setLoadingUsers(false);
+    }
+    fetchAllUsers();
+  });
+
+  // Re-fetch on page change
+  const fetchPage = async (p: number) => {
+    setPage(p);
+    setLoadingUsers(true);
+    const supabase = createClient();
+    const { data } = await supabase
+      .from("profiles")
+      .select("id, username, full_name, avatar_url")
+      .neq("id", senderId)
+      .order("username", { ascending: true })
+      .range(p * USERS_PER_PAGE, (p + 1) * USERS_PER_PAGE - 1);
+
+    if (data) setAllUsers(data);
+    setLoadingUsers(false);
+  };
 
   async function handleSearch(e: React.ChangeEvent<HTMLInputElement>) {
     const query = e.target.value;
@@ -178,7 +216,7 @@ export function SendKhamForm({ senderId, senderProfile }: { senderId: string, se
         autoFocus
       />
 
-      {searchQuery && (
+      {searchQuery ? (
         <div className="mt-4 space-y-2 border rounded-xl overflow-hidden shadow-sm">
           {searching ? (
             <p className="p-4 text-gray-500 text-sm">Searching...</p>
@@ -203,6 +241,61 @@ export function SendKhamForm({ senderId, senderProfile }: { senderId: string, se
                 <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium">Select</span>
               </button>
             ))
+          )}
+        </div>
+      ) : (
+        <div className="mt-6">
+          <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-3">All Users</p>
+          <div className="space-y-2 border rounded-2xl overflow-hidden shadow-sm bg-white">
+            {loadingUsers ? (
+              <div className="p-8 text-center">
+                <div className="inline-block animate-spin rounded-full h-5 w-5 border-t-2 border-primary mr-2"></div>
+                <span className="text-sm text-gray-400">Loading users...</span>
+              </div>
+            ) : allUsers.length === 0 ? (
+              <p className="p-8 text-center text-gray-400 text-sm">No users available yet.</p>
+            ) : (
+              allUsers.map(user => (
+                <button
+                  key={user.id}
+                  onClick={() => setSelectedUser(user)}
+                  className="w-full text-left p-4 hover:bg-primary/5 transition flex items-center justify-between border-b last:border-0"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-cream shrink-0 overflow-hidden border-2 border-primary/5">
+                      <img src={user.avatar_url || "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png"} className="w-full h-full object-cover" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-gray-900">{user.full_name || "No name"}</p>
+                      <p className="text-sm text-gray-500">@{user.username}</p>
+                    </div>
+                  </div>
+                  <div className="bg-primary text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-sm hover:scale-105 transition">
+                    Send Salami Card
+                  </div>
+                </button>
+              ))
+            )}
+          </div>
+
+          {!loadingUsers && allUsers.length > 0 && (
+            <div className="mt-6 flex items-center justify-between px-2">
+              <button
+                onClick={() => fetchPage(Math.max(0, page - 1))}
+                disabled={page === 0}
+                className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-bold text-gray-600 disabled:opacity-30 hover:bg-gray-50"
+              >
+                <i className="fa-solid fa-arrow-left mr-2"></i> Previous
+              </button>
+              <div className="text-sm font-bold text-gray-400">Page {page + 1}</div>
+              <button
+                onClick={() => fetchPage(page + 1)}
+                disabled={allUsers.length < USERS_PER_PAGE}
+                className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-bold text-gray-600 disabled:opacity-30 hover:bg-gray-50"
+              >
+                Next <i className="fa-solid fa-arrow-right ml-2"></i>
+              </button>
+            </div>
           )}
         </div>
       )}
