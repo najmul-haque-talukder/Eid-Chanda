@@ -16,7 +16,10 @@ export default async function SentPage({ searchParams }: Props) {
     .eq("sender_id", user.id)
     .order("created_at", { ascending: false });
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://digitalkham.vercel.app";
+  const headersList = await (await import("next/headers")).headers();
+  const host = headersList.get("host") || "";
+  const protocol = host.includes("localhost") ? "http" : "https";
+  const baseUrl = `${protocol}://${host}`;
   const createdSlug = (await searchParams).created;
 
   return (
