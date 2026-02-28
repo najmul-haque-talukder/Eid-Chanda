@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import QRCode from "react-qr-code";
 
@@ -21,7 +21,16 @@ type Props = { kham: Kham; baseUrl: string };
 export function SentKhamRow({ kham, baseUrl }: Props) {
   const [copied, setCopied] = useState(false);
   const [showQR, setShowQR] = useState(false);
-  const link = `${baseUrl}/k/${kham.slug}`;
+  const [link, setLink] = useState("");
+
+  useEffect(() => {
+    // Dynamically detect the correct base URL
+    const currentOrigin = window.location.origin;
+    const finalBase = (baseUrl && baseUrl !== "https://digitalkham.vercel.app")
+      ? baseUrl
+      : currentOrigin;
+    setLink(`${finalBase}/k/${kham.slug}`);
+  }, [baseUrl, kham.slug]);
 
   function copy() {
     navigator.clipboard.writeText(link);

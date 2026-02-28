@@ -3,7 +3,7 @@
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ToastContext";
-import { useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 
 export function SendKhamForm({ senderId, senderProfile }: { senderId: string, senderProfile: any }) {
   const router = useRouter();
