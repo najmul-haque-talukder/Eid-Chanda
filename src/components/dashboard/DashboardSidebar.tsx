@@ -14,7 +14,7 @@ const nav = [
   { href: "/dashboard/received", labelKey: "dashboard.received", icon: <i className="fa-solid fa-inbox fa-fw"></i> },
   { href: "/dashboard/friends", labelKey: "dashboard.friends", icon: <i className="fa-solid fa-users fa-fw"></i> },
   { href: "/dashboard/messages", labelKey: "dashboard.messages", icon: <i className="fa-solid fa-comment-dots fa-fw"></i> },
-  { href: "/dashboard/dua-wall", labelKey: "dashboard.duawall", icon: <i className="fa-solid fa-hands-praying fa-fw"></i> },
+  { href: "/dashboard/dua-wall", labelKey: "dashboard.duawall", icon: <i className="fa-solid fa-person-praying fa-fw"></i> },
 ];
 
 export function DashboardSidebar({ user }: { user: User }) {

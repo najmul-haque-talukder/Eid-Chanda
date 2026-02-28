@@ -324,7 +324,7 @@ export function KhamEnvelopeExperience({ kham }: Props) {
                 { emoji: '❤️', icon: 'fa-heart text-red-500' },
                 { emoji: '🥹', icon: 'fa-face-grin-stars text-yellow-500' },
                 { emoji: '😂', icon: 'fa-face-laugh-squint text-orange-500' },
-                { emoji: '🤲', icon: 'fa-hands-praying text-primary' }
+                { emoji: '🤲', icon: 'fa-person-praying text-primary' }
               ].map((item) => (
                 <button
                   key={item.emoji}

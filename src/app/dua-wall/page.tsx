@@ -26,7 +26,7 @@ export default async function DuaWallPage() {
                 {!duas?.length && (
                     <div className="text-center py-12 text-gray-500 bg-white rounded-2xl shadow-sm border border-cream-dark">
                         <p className="text-xl mb-2 text-primary">
-                            <i className="fa-solid fa-hands-praying fa-fw"></i>
+                            <i className="fa-solid fa-person-praying fa-fw"></i>
                         </p>
                         <p>No public Duas yet. Be the first to share one!</p>
                     </div>

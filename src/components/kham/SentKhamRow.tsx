@@ -67,7 +67,7 @@ export function SentKhamRow({ kham, baseUrl }: Props) {
               kham.reaction === '❤️' ? <span>feel loved <i className="fa-solid fa-heart text-red-500"></i></span> :
                 kham.reaction === '🥹' ? <span>emotional <i className="fa-solid fa-face-grin-stars text-yellow-500"></i></span> :
                   kham.reaction === '😂' ? <span>laugh <i className="fa-solid fa-face-laugh-squint text-orange-500"></i></span> :
-                    kham.reaction === '🤲' ? <span>make dua <i className="fa-solid fa-hands-praying text-primary"></i></span> : 'react!'
+                    kham.reaction === '🤲' ? <span>make dua <i className="fa-solid fa-person-praying text-primary"></i></span> : 'react!'
             }
           </p>
         )}

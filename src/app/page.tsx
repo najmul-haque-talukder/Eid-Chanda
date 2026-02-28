@@ -55,7 +55,7 @@ export default async function HomePage() {
             href="/dua-wall"
             className="px-8 py-3 rounded-xl border border-primary text-primary font-medium hover:bg-primary/5 transition-colors flex items-center justify-center gap-2"
           >
-            <i className="fa-solid fa-hands-praying fa-fw"></i> দোয়া ওয়াল
+            <i className="fa-solid fa-person-praying fa-fw"></i> দোয়া ওয়াল
           </Link>
         </div>
       </div>
