@@ -1,4 +1,5 @@
 # Eid Chanda — The Digital Eid Experience
+# Full project totally amare Depression e falaiya disilo! Hajaro Bug ar error er sathe lorai korlam.
 
 **Today: Eid focused. Tomorrow: Every occasion.**
 

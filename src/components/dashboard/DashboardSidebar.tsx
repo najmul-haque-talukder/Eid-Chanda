@@ -20,6 +20,7 @@ const nav = [
 export function DashboardSidebar({ user }: { user: User }) {
   const pathname = usePathname();
   const [unreadCount, setUnreadCount] = useState(0);
+  const [friendRequestCount, setFriendRequestCount] = useState(0);
   const { t, lang, setLang } = useLanguage();
 
   useEffect(() => {
@@ -32,6 +33,13 @@ export function DashboardSidebar({ user }: { user: User }) {
         .eq("receiver_id", user.id)
         .eq("is_read", false);
       if (count !== null) setUnreadCount(count);
+
+      const { count: requestCount } = await supabase
+        .from("friendships")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "pending")
+        .neq("action_user_id", user.id);
+      if (requestCount !== null) setFriendRequestCount(requestCount);
     }
     fetchUnread();
 
@@ -51,7 +59,29 @@ export function DashboardSidebar({ user }: { user: User }) {
       })
       .subscribe();
 
-    return () => { supabase.removeChannel(sub); };
+    const subFriends = supabase
+      .channel('public:friendships_sidebar')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'friendships', filter: 'status=eq.pending' }, payload => {
+        if (payload.new && payload.new.action_user_id !== user.id) {
+          setFriendRequestCount(prev => prev + 1);
+        }
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'friendships' }, payload => {
+        if (payload.old && payload.new && payload.old.status === 'pending' && payload.new.status !== 'pending' && payload.old.action_user_id !== user.id) {
+          setFriendRequestCount(prev => Math.max(0, prev - 1));
+        }
+      })
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'friendships' }, payload => {
+        if (payload.old && payload.old.status === 'pending' && payload.old.action_user_id !== user.id) {
+          setFriendRequestCount(prev => Math.max(0, prev - 1));
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(sub);
+      supabase.removeChannel(subFriends);
+    };
   }, [user.id]);
 
   async function signOut() {
@@ -77,6 +107,11 @@ export function DashboardSidebar({ user }: { user: User }) {
                   {unreadCount}
                 </span>
               )}
+              {href === '/dashboard/friends' && friendRequestCount > 0 && (
+                <span className="absolute -top-1 -right-2 bg-primary text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full z-10">
+                  {friendRequestCount}
+                </span>
+              )}
             </span>
             <span className="text-[10px] font-medium mt-1 truncate max-w-[60px] text-center">{t[labelKey]}</span>
           </Link>
@@ -85,10 +120,9 @@ export function DashboardSidebar({ user }: { user: User }) {
 
       {/* Mobile Top Header */}
       <div className="md:hidden flex items-center justify-between p-4 bg-white border-b border-cream-dark sticky top-0 z-40">
-        <div className="flex items-center gap-2">
-          <img src="/logos/main_logo.png" className="h-8 object-contain" alt="Eid Chanda" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }} />
-          <p className="font-bold text-primary hidden text-xl font-bangla">ঈদ চান্দা</p>
-        </div>
+        <Link href="/dashboard" className="flex items-center gap-2">
+          <p className="font-bold text-primary text-2xl font-bangla tracking-tight select-none">ঈদ চান্দা</p>
+        </Link>
         <button onClick={() => setLang(lang === 'bn' ? 'en' : 'bn')} className="text-xs font-bold bg-cream px-3 py-1.5 rounded-full border border-cream-dark text-primary">
           {t["dashboard.toggleLang"]}
         </button>
@@ -97,10 +131,9 @@ export function DashboardSidebar({ user }: { user: User }) {
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex w-64 shrink-0 border-r border-cream-dark bg-white flex-col h-screen sticky top-0">
         <div className="p-6 border-b border-cream-dark relative">
-          <div className="flex items-center gap-3 mb-2">
-            <img src="/logos/main_logo.png" className="h-10 object-contain drop-shadow-sm" alt="Eid Chanda" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }} />
-            <p className="font-bold text-primary hidden text-2xl font-bangla tracking-wide">ঈদ চান্দা</p>
-          </div>
+          <Link href="/dashboard" className="flex items-center gap-3 mb-2">
+            <p className="font-bold text-primary text-3xl font-bangla tracking-tight select-none mt-1 shadow-primary/10">ঈদ চান্দা</p>
+          </Link>
           <p className="text-xs text-gray-500 truncate mt-1 bg-cream-dark/30 p-2 rounded-lg font-mono">{user.email}</p>
           <button onClick={() => setLang(lang === 'bn' ? 'en' : 'bn')} className="absolute top-6 right-4 text-[10px] font-bold bg-cream px-2 py-1 rounded-full border border-cream-dark text-primary hover:bg-primary hover:text-white transition">
             {t["dashboard.toggleLang"]}
@@ -123,6 +156,11 @@ export function DashboardSidebar({ user }: { user: User }) {
               {href === '/dashboard/messages' && unreadCount > 0 && (
                 <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full animate-bounce">
                   {unreadCount}
+                </span>
+              )}
+              {href === '/dashboard/friends' && friendRequestCount > 0 && (
+                <span className="bg-primary text-white text-xs font-bold px-2 py-0.5 rounded-full animate-pulse shadow-sm">
+                  {friendRequestCount}
                 </span>
               )}
             </Link>
