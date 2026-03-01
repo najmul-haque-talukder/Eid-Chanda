@@ -3,9 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
+    request,
   });
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -27,9 +25,7 @@ export async function updateSession(request: NextRequest) {
           request.cookies.set(name, value)
         );
         response = NextResponse.next({
-          request: {
-            headers: request.headers,
-          },
+          request,
         });
         cookiesToSet.forEach(({ name, value, options }: any) =>
           response.cookies.set(name, value, options)
