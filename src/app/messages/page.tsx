@@ -6,7 +6,7 @@ import Link from "next/link";
 export default async function MessagesPage({ searchParams }: { searchParams: Promise<{ to?: string }> }) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) redirect("/login");
+    if (!user) redirect("/");
 
     const toId = (await searchParams).to;
 
@@ -59,11 +59,11 @@ export default async function MessagesPage({ searchParams }: { searchParams: Pro
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-cream-dark">
                     <h2 className="text-lg font-bold text-gray-900 mb-4">Select a friend to message</h2>
                     {friendsList.length === 0 ? (
-                        <p className="text-gray-500">You don't have any friends yet. <Link href="/dashboard/friends" className="text-primary underline">Find friends</Link></p>
+                        <p className="text-gray-500">You don't have any friends yet. <Link href="/friends" className="text-primary underline">Find friends</Link></p>
                     ) : (
                         <div className="space-y-2">
                             {friendsList.map(f => (
-                                <Link key={f.id} href={`/dashboard/messages?to=${f.id}`} className="block p-4 rounded-xl border border-gray-200 hover:border-primary hover:bg-primary/5 transition">
+                                <Link key={f.id} href={`/messages?to=${f.id}`} className="block p-4 rounded-xl border border-gray-200 hover:border-primary hover:bg-primary/5 transition">
                                     <div className="flex items-center justify-between gap-4">
                                         <div className="flex items-center gap-4">
                                             <div className="w-10 h-10 rounded-full bg-cream-dark flex items-center justify-center overflow-hidden shrink-0 border border-primary/20">
@@ -92,7 +92,7 @@ export default async function MessagesPage({ searchParams }: { searchParams: Pro
             ) : (
                 <div>
                     <div className="mb-4">
-                        <Link href="/dashboard/messages" className="text-sm text-primary hover:underline">← Back to Messages</Link>
+                        <Link href="/messages" className="text-sm text-primary hover:underline">← Back to Messages</Link>
                     </div>
                     <MessageChat
                         currentUserId={user.id}

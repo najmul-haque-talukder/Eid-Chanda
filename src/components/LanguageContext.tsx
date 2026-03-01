@@ -21,6 +21,7 @@ const translations: Record<Lang, Record<string, string>> = {
         "dashboard.duawall": "My Dua Wall",
         "dashboard.logout": "Logout",
         "dashboard.toggleLang": "বাংলা",
+        "dashboard.about": "About",
     },
     bn: {
         "dashboard.profile": "আমার প্রোফাইল",
@@ -32,6 +33,7 @@ const translations: Record<Lang, Record<string, string>> = {
         "dashboard.duawall": "আমার দোয়া ওয়াল",
         "dashboard.logout": "লগআউট",
         "dashboard.toggleLang": "English",
+        "dashboard.about": "সম্পর্কে",
     }
 };
 
@@ -60,7 +62,11 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
     return (
         <LanguageContext.Provider value={{ lang, setLang, t: translations[lang] }}>
-            {children}
+            {mounted ? children : (
+                <div className="fixed inset-0 bg-cream flex items-center justify-center">
+                    <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                </div>
+            )}
         </LanguageContext.Provider>
     );
 }

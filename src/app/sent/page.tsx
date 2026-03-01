@@ -8,7 +8,7 @@ type Props = { searchParams: Promise<{ created?: string }> };
 export default async function SentPage({ searchParams }: Props) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  if (!user) redirect("/");
 
   const { data: khams } = await supabase
     .from("khams")
@@ -37,7 +37,7 @@ export default async function SentPage({ searchParams }: Props) {
 
       <div className="mt-6 space-y-4">
         {!khams?.length && (
-          <p className="text-gray-500">No Khāms sent yet. <Link href="/dashboard/send" className="text-primary underline">Send one</Link>.</p>
+          <p className="text-gray-500">No Khāms sent yet. <Link href="/send" className="text-primary underline">Send one</Link>.</p>
         )}
         {khams?.filter(k => k.slug).map((k) => (
           <SentKhamRow key={k.id} kham={k} baseUrl={baseUrl} />

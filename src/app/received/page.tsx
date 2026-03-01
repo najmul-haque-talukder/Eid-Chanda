@@ -5,7 +5,7 @@ import Link from "next/link";
 export default async function ReceivedPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  if (!user) redirect("/");
 
   // Fetch khams where this user is the receiver
   const { data: khams } = await supabase

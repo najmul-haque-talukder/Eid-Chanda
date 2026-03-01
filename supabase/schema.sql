@@ -206,4 +206,37 @@ create policy "Users can update own received messages (mark as read)"
   on public.messages for update
   using (auth.uid() = receiver_id);
 
+-- 3. Duas Table
+create table if not exists public.duas (
+  id uuid primary key default uuid_generate_v4(),
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  content text not null,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+create index if not exists duas_user_id_idx on public.duas(user_id);
+
+alter table public.duas enable row level security;
+
+drop policy if exists "Duas are viewable by everyone" on public.duas;
+create policy "Duas are viewable by everyone"
+  on public.duas for select
+  using (true);
+
+drop policy if exists "Users can insert own duas" on public.duas;
+create policy "Users can insert own duas"
+  on public.duas for insert
+  with check (auth.uid() = user_id);
+
+drop policy if exists "Users can update own duas" on public.duas;
+create policy "Users can update own duas"
+  on public.duas for update
+  using (auth.uid() = user_id);
+
+drop policy if exists "Users can delete own duas" on public.duas;
+create policy "Users can delete own duas"
+  on public.duas for delete
+  using (auth.uid() = user_id);
+
 NOTIFY pgrst, 'reload schema';

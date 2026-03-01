@@ -6,7 +6,7 @@ import type { Kham } from "@/types/database";
 export default async function ArchivePage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  if (!user) redirect("/");
 
   const { data: archiveRows } = await supabase
     .from("archive")

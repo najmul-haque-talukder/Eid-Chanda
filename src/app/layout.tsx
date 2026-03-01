@@ -18,21 +18,27 @@ const poppins = Poppins({
 
 export const metadata: Metadata = {
   title: "Eid Chanda — Digital Eid Experience",
-  description:
-    "Create Salami Request Cards, send Digital Khām, and save memories in your Eid Archive.",
+  description: "Create Salami Request Cards, send Digital Khām, and save memories in your Eid Archive.",
   icons: {
     icon: "/icon.png",
     apple: "/icon.png",
   },
 };
 
+import { createClient } from "@/lib/supabase/server";
 import { ToastProvider } from "@/components/ToastContext";
+import { LanguageProvider } from "@/components/LanguageContext";
+import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
+import { DashboardRightSidebar } from "@/components/dashboard/DashboardRightSidebar";
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
   return (
     <html
       lang="bn"
@@ -51,9 +57,26 @@ export default function RootLayout({
       </head>
       <body className="font-sans min-h-screen bg-cream text-gray-900" suppressHydrationWarning>
         <ToastProvider>
-          {children}
+          <LanguageProvider>
+            {/* The dash-layout structure is now at Root level */}
+            <DashboardWrapper user={user}>
+              {children}
+            </DashboardWrapper>
+          </LanguageProvider>
         </ToastProvider>
       </body>
     </html>
   );
 }
+
+// Helper component to handle sidebar visibility
+import { HeaderHider } from "@/components/layout/HeaderHider";
+
+function DashboardWrapper({ children, user }: { children: React.ReactNode, user: any }) {
+  return (
+    <HeaderHider user={user}>
+      {children}
+    </HeaderHider>
+  );
+}
+

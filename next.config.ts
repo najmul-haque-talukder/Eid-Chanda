@@ -4,7 +4,11 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       { hostname: "lh3.googleusercontent.com" },
-      { hostname: "supabase.co", pathname: "/storage/**" },
+      { hostname: "pjtzqctwfvainvirtaern.supabase.co" },
+      { hostname: "upload.wikimedia.org" },
+      { hostname: "download.logo.wine" },
+      { hostname: "play-lh.googleusercontent.com" },
+      { hostname: "www.dutchbanglabank.com" },
     ],
   },
 };

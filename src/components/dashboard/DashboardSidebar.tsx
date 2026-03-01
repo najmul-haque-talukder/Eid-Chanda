@@ -8,29 +8,36 @@ import { useLanguage } from "@/components/LanguageContext";
 import type { User } from "@supabase/supabase-js";
 
 const nav = [
-  { href: "/dashboard", labelKey: "dashboard.profile", icon: <i className="fa-solid fa-user fa-fw"></i> },
-  { href: "/dashboard/send", labelKey: "dashboard.send", icon: <i className="fa-solid fa-paper-plane fa-fw"></i> },
-  { href: "/dashboard/sent", labelKey: "dashboard.sent", icon: <i className="fa-solid fa-box-open fa-fw"></i> },
-  { href: "/dashboard/received", labelKey: "dashboard.received", icon: <i className="fa-solid fa-inbox fa-fw"></i> },
-  { href: "/dashboard/friends", labelKey: "dashboard.friends", icon: <i className="fa-solid fa-users fa-fw"></i> },
-  { href: "/dashboard/messages", labelKey: "dashboard.messages", icon: <i className="fa-solid fa-comment-dots fa-fw"></i> },
-  { href: "/dashboard/dua-wall", labelKey: "dashboard.duawall", icon: <i className="fa-solid fa-person-praying fa-fw"></i> },
+  { href: "/", labelKey: "dashboard.profile", icon: <i className="fa-solid fa-user fa-fw"></i> },
+  { href: "/send", labelKey: "dashboard.send", icon: <i className="fa-solid fa-paper-plane fa-fw"></i> },
+  { href: "/sent", labelKey: "dashboard.sent", icon: <i className="fa-solid fa-box-open fa-fw"></i> },
+  { href: "/received", labelKey: "dashboard.received", icon: <i className="fa-solid fa-inbox fa-fw"></i> },
+  { href: "/friends", labelKey: "dashboard.friends", icon: <i className="fa-solid fa-users fa-fw"></i> },
+  { href: "/messages", labelKey: "dashboard.messages", icon: <i className="fa-solid fa-comment-dots fa-fw"></i> },
+  { href: "/dua-wall", labelKey: "dashboard.duawall", icon: <i className="fa-solid fa-person-praying fa-fw"></i> },
+  { href: "/about", labelKey: "dashboard.about", icon: <i className="fa-solid fa-info-circle fa-fw"></i> },
 ];
 
-export function DashboardSidebar({ user }: { user: User }) {
+export function DashboardSidebar({ user }: { user: User | null }) {
   const pathname = usePathname();
   const [unreadCount, setUnreadCount] = useState(0);
   const [friendRequestCount, setFriendRequestCount] = useState(0);
   const { t, lang, setLang } = useLanguage();
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!user) return;
     // 1. Fetch initial unread count
     async function fetchUnread() {
       const supabase = createClient();
       const { count } = await supabase
         .from("messages")
         .select("*", { count: "exact", head: true })
-        .eq("receiver_id", user.id)
+        .eq("receiver_id", user!.id)
         .eq("is_read", false);
       if (count !== null) setUnreadCount(count);
 
@@ -38,7 +45,7 @@ export function DashboardSidebar({ user }: { user: User }) {
         .from("friendships")
         .select("*", { count: "exact", head: true })
         .eq("status", "pending")
-        .neq("action_user_id", user.id);
+        .neq("action_user_id", user!.id);
       if (requestCount !== null) setFriendRequestCount(requestCount);
     }
     fetchUnread();
@@ -53,8 +60,6 @@ export function DashboardSidebar({ user }: { user: User }) {
         }
       })
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages', filter: `receiver_id=eq.${user.id}` }, async payload => {
-        // Because of Postgres REPLICA IDENTITY DEFAULT, payload.old might not contain is_read.
-        // Safest approach is to re-fetch the absolute count on any update to our received messages.
         const { count } = await supabase
           .from("messages")
           .select("*", { count: "exact", head: true })
@@ -93,12 +98,24 @@ export function DashboardSidebar({ user }: { user: User }) {
       supabase.removeChannel(sub);
       supabase.removeChannel(subFriends);
     };
-  }, [user.id]);
+  }, [user]);
 
   async function signOut() {
     const supabase = createClient();
     await supabase.auth.signOut();
     window.location.href = "/";
+  }
+
+  if (!mounted) {
+    return (
+      <aside className="hidden md:flex w-64 shrink-0 border-r border-cream-dark bg-white flex-col h-screen sticky top-0 py-6">
+        <div className="px-6 mb-8 relative flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <p className="font-bold text-primary text-2xl font-bangla tracking-tight select-none mt-1">ঈদ চান্দা</p>
+          </div>
+        </div>
+      </aside>
+    );
   }
 
   return (
@@ -134,29 +151,35 @@ export function DashboardSidebar({ user }: { user: User }) {
         <Link href="/dashboard" className="flex items-center gap-2">
           <p className="font-bold text-primary text-2xl font-bangla tracking-tight select-none">ঈদ চান্দা</p>
         </Link>
-        <button onClick={() => setLang(lang === 'bn' ? 'en' : 'bn')} className="text-xs font-bold bg-cream px-3 py-1.5 rounded-full border border-cream-dark text-primary">
-          {t["dashboard.toggleLang"]}
+        <button onClick={() => setLang(lang === 'bn' ? 'en' : 'bn')} className="text-[10px] font-bold bg-cream px-3 py-1.5 rounded-full border border-cream-dark text-primary flex items-center gap-1.5 shadow-sm">
+          <i className="fa-solid fa-language text-xs opacity-60"></i>
+          {lang === 'bn' ? 'English' : 'বাংলা'}
         </button>
       </div>
 
-      {/* Desktop Sidebar */}
-      <aside className="hidden md:flex w-64 shrink-0 border-r border-cream-dark bg-white flex-col h-screen sticky top-0">
-        <div className="p-6 border-b border-cream-dark relative">
-          <Link href="/dashboard" className="flex items-center gap-3 mb-2">
-            <p className="font-bold text-primary text-3xl font-bangla tracking-tight select-none mt-1 shadow-primary/10">ঈদ চান্দা</p>
+      {/* Desktop Sidebar (Icon + Text) */}
+      <aside className="hidden md:flex w-64 shrink-0 border-r border-cream-dark bg-white flex-col h-screen sticky top-0 py-6">
+        <div className="px-6 mb-8 relative flex items-center justify-between">
+          <Link href="/dashboard" className="flex items-center gap-2">
+            <p className="font-bold text-primary text-2xl font-bangla tracking-tight select-none mt-1">ঈদ চান্দা</p>
           </Link>
-          <p className="text-xs text-gray-500 truncate mt-1 bg-cream-dark/30 p-2 rounded-lg font-mono">{user.email}</p>
-          <button onClick={() => setLang(lang === 'bn' ? 'en' : 'bn')} className="absolute top-6 right-4 text-[10px] font-bold bg-cream px-2 py-1 rounded-full border border-cream-dark text-primary hover:bg-primary hover:text-white transition">
-            {t["dashboard.toggleLang"]}
+          <button
+            onClick={() => setLang(lang === 'bn' ? 'en' : 'bn')}
+            className="flex items-center gap-2 px-3 py-1.5 text-[10px] font-bold bg-cream rounded-lg border border-cream-dark text-primary hover:bg-primary hover:text-white transition shadow-sm group"
+            title={t["dashboard.toggleLang"]}
+          >
+            <i className="fa-solid fa-language text-xs opacity-60 group-hover:opacity-100"></i>
+            <span>{lang === 'bn' ? 'English' : 'বাংলা'}</span>
           </button>
         </div>
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+
+        <nav className="flex-1 w-full px-4 space-y-1 overflow-y-auto">
           {nav.map(({ href, labelKey, icon }) => (
             <Link
               key={href}
               href={href}
-              className={`flex items-center justify-between rounded-xl px-4 py-3 text-sm font-bold transition-all ${pathname === href
-                ? "bg-primary text-white shadow-md shadow-primary/20 translate-x-1"
+              className={`flex items-center justify-between rounded-xl px-4 py-3 text-sm font-bold transition-all duration-300 ${pathname === href
+                ? "bg-primary text-white shadow-lg shadow-primary/20 translate-x-1"
                 : "text-gray-600 hover:bg-cream hover:text-primary"
                 }`}
             >
@@ -164,28 +187,33 @@ export function DashboardSidebar({ user }: { user: User }) {
                 <span className="text-lg">{icon}</span>
                 <span>{t[labelKey]}</span>
               </div>
-              {href === '/dashboard/messages' && unreadCount > 0 && (
-                <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full animate-bounce">
-                  {unreadCount}
-                </span>
-              )}
-              {href === '/dashboard/friends' && friendRequestCount > 0 && (
-                <span className="bg-primary text-white text-xs font-bold px-2 py-0.5 rounded-full animate-pulse shadow-sm">
-                  {friendRequestCount}
-                </span>
-              )}
+              <div className="flex items-center gap-1">
+                {href === '/dashboard/messages' && unreadCount > 0 && (
+                  <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                    {unreadCount}
+                  </span>
+                )}
+                {href === '/dashboard/friends' && friendRequestCount > 0 && (
+                  <span className="bg-white text-primary text-[10px] font-bold px-2 py-0.5 rounded-full">
+                    {friendRequestCount}
+                  </span>
+                )}
+              </div>
             </Link>
           ))}
         </nav>
-        <div className="p-4 border-t border-cream-dark bg-white">
-          <button
-            type="button"
-            onClick={signOut}
-            className="w-full rounded-xl px-4 py-3 text-sm font-bold text-red-600 hover:bg-red-50 hover:text-red-700 transition flex items-center justify-center gap-2"
-          >
-            <i className="fa-solid fa-arrow-right-from-bracket"></i>
-            <span>{t["dashboard.logout"]}</span>
-          </button>
+
+        <div className="mt-auto px-4 w-full pt-4 border-t border-cream-dark">
+          {user && (
+            <button
+              type="button"
+              onClick={signOut}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-red-500 hover:bg-red-50 hover:text-red-700 transition"
+            >
+              <i className="fa-solid fa-arrow-right-from-bracket text-lg"></i>
+              <span>{t["dashboard.logout"]}</span>
+            </button>
+          )}
         </div>
       </aside>
     </>

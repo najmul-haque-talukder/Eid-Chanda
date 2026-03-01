@@ -5,7 +5,7 @@ import { FriendsManager } from "@/components/friends/FriendsManager";
 export default async function FriendsPage() {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) redirect("/login");
+    if (!user) redirect("/");
 
     return (
         <div className="max-w-2xl">
