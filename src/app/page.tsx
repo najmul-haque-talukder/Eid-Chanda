@@ -114,8 +114,12 @@ function HomeContent() {
             <span className="flex items-center gap-2 text-xs font-medium text-gray-500 bg-gray-50 px-3 py-1.5 rounded-full">
               <i className="fa-solid fa-bolt text-yellow-500"></i> Instant OTP-less login
             </span>
-            <Link href="/dua-wall" className="mt-2 text-primary hover:underline text-sm font-medium flex items-center gap-1.5">
-              <i className="fa-solid fa-person-praying fa-fw"></i> পাবলিক দোয়া ওয়াল
+            <Link
+              href="/dua-wall"
+              className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-primary/20 bg-primary/5 text-primary hover:bg-primary hover:text-white font-bold transition-all group"
+            >
+              <i className="fa-solid fa-person-praying fa-fw group-hover:animate-bounce"></i>
+              পাবলিক দোয়া ওয়াল দেখুন
             </Link>
           </div>
         </div>
