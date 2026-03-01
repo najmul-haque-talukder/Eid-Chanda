@@ -235,18 +235,18 @@ export function SendKhamForm({ senderId, senderProfile }: { senderId: string, se
               <button
                 key={user.id}
                 onClick={() => setSelectedUser(user)}
-                className="w-full text-left p-4 hover:bg-primary/5 transition flex items-center justify-between border-b last:border-0"
+                className="w-full text-left p-3 sm:p-4 hover:bg-primary/5 transition flex items-center justify-between gap-3 border-b last:border-0"
               >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-cream shrink-0 overflow-hidden">
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-cream shrink-0 overflow-hidden">
                     <img src={user.avatar_url || "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png"} className="w-full h-full object-cover" loading="lazy" />
                   </div>
-                  <div>
-                    <p className="font-bold text-gray-900">{user.full_name || "No name"}</p>
-                    <p className="text-sm text-gray-500">@{user.username}</p>
+                  <div className="min-w-0">
+                    <p className="font-bold text-gray-900 text-sm sm:text-base truncate">{user.full_name || "No name"}</p>
+                    <p className="text-xs text-gray-500 truncate">@{user.username}</p>
                   </div>
                 </div>
-                <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium">Select</span>
+                <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs sm:text-sm font-medium shrink-0">Select</span>
               </button>
             ))
           )}
@@ -267,19 +267,19 @@ export function SendKhamForm({ senderId, senderProfile }: { senderId: string, se
                 <button
                   key={user.id}
                   onClick={() => setSelectedUser(user)}
-                  className="w-full text-left p-4 hover:bg-primary/5 transition flex items-center justify-between border-b last:border-0"
+                  className="w-full text-left p-3 sm:p-4 hover:bg-primary/5 transition flex items-center justify-between gap-3 border-b last:border-0"
                 >
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-cream shrink-0 overflow-hidden border-2 border-primary/5">
+                  <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-cream shrink-0 overflow-hidden border-2 border-primary/5">
                       <img src={user.avatar_url || "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png"} className="w-full h-full object-cover" loading="lazy" />
                     </div>
-                    <div>
-                      <p className="font-bold text-gray-900">{user.full_name || "No name"}</p>
-                      <p className="text-sm text-gray-500">@{user.username}</p>
+                    <div className="min-w-0">
+                      <p className="font-bold text-gray-900 text-sm sm:text-base truncate">{user.full_name || "No name"}</p>
+                      <p className="text-xs sm:text-sm text-gray-500 truncate">@{user.username}</p>
                     </div>
                   </div>
-                  <div className="bg-primary text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-sm hover:scale-105 transition">
-                    Send Salami Card
+                  <div className="bg-primary text-white text-[10px] sm:text-xs font-bold px-3 py-1.5 sm:px-4 rounded-full shadow-sm shrink-0 whitespace-nowrap transition-transform hover:scale-105 active:scale-95">
+                    Send Card
                   </div>
                 </button>
               ))
