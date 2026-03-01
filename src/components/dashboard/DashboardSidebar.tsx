@@ -52,10 +52,15 @@ export function DashboardSidebar({ user }: { user: User }) {
           setUnreadCount(prev => prev + 1);
         }
       })
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages', filter: `receiver_id=eq.${user.id}` }, payload => {
-        if (payload.old && payload.new && !payload.old.is_read && payload.new.is_read) {
-          setUnreadCount(prev => Math.max(0, prev - 1));
-        }
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages', filter: `receiver_id=eq.${user.id}` }, async payload => {
+        // Because of Postgres REPLICA IDENTITY DEFAULT, payload.old might not contain is_read.
+        // Safest approach is to re-fetch the absolute count on any update to our received messages.
+        const { count } = await supabase
+          .from("messages")
+          .select("*", { count: "exact", head: true })
+          .eq("receiver_id", user.id)
+          .eq("is_read", false);
+        if (count !== null) setUnreadCount(count);
       })
       .subscribe();
 
