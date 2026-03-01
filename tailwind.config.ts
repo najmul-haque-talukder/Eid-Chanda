@@ -22,7 +22,7 @@ const config: Config = {
       },
       fontFamily: {
         bangla: ["var(--font-hind-siliguri)", "sans-serif"],
-        sans: ["var(--font-poppins)", "sans-serif"],
+        sans: ["var(--font-hind-siliguri)", "var(--font-poppins)", "sans-serif"],
       },
       animation: {
         "envelope-flutter": "envelope-flutter 0.4s ease-in-out",

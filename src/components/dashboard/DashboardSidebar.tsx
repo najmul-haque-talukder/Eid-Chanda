@@ -7,16 +7,21 @@ import { createClient } from "@/lib/supabase/client";
 import { useLanguage } from "@/components/LanguageContext";
 import type { User } from "@supabase/supabase-js";
 
-const nav = [
+const mainNav = [
   { href: "/", labelKey: "dashboard.profile", icon: <i className="fa-solid fa-user fa-fw"></i> },
   { href: "/send", labelKey: "dashboard.send", icon: <i className="fa-solid fa-paper-plane fa-fw"></i> },
   { href: "/sent", labelKey: "dashboard.sent", icon: <i className="fa-solid fa-box-open fa-fw"></i> },
   { href: "/received", labelKey: "dashboard.received", icon: <i className="fa-solid fa-inbox fa-fw"></i> },
   { href: "/friends", labelKey: "dashboard.friends", icon: <i className="fa-solid fa-users fa-fw"></i> },
   { href: "/messages", labelKey: "dashboard.messages", icon: <i className="fa-solid fa-comment-dots fa-fw"></i> },
+];
+
+const auxNav = [
   { href: "/dua-wall", labelKey: "dashboard.duawall", icon: <i className="fa-solid fa-person-praying fa-fw"></i> },
   { href: "/about", labelKey: "dashboard.about", icon: <i className="fa-solid fa-info-circle fa-fw"></i> },
 ];
+
+const allNav = [...mainNav, ...auxNav];
 
 export function DashboardSidebar({ user }: { user: User | null }) {
   const pathname = usePathname();
@@ -120,47 +125,62 @@ export function DashboardSidebar({ user }: { user: User | null }) {
 
   return (
     <>
-      {/* Mobile Bottom Navigation */}
+      {/* Mobile Bottom Navigation (6 Main Items) */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-cream-dark flex items-center justify-around z-50 pb-safe">
-        {nav.map(({ href, labelKey, icon }) => (
+        {mainNav.map(({ href, labelKey, icon }) => (
           <Link
             key={href}
             href={href}
-            className={`flex flex-col items-center justify-center w-full py-4 transition-all ${pathname === href ? "text-primary border-t-2 border-primary -mt-[2px]" : "text-gray-500 hover:text-gray-900"}`}
+            className={`flex flex-col items-center justify-center w-full py-3 transition-all ${pathname === href ? "text-primary border-t-2 border-primary -mt-[2px]" : "text-gray-500 hover:text-gray-900"}`}
           >
-            <span className="text-xl relative">
+            <span className="text-lg relative">
               {icon}
-              {href === '/dashboard/messages' && unreadCount > 0 && (
+              {href === '/messages' && unreadCount > 0 && (
                 <span className="absolute -top-1 -right-2 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full z-10">
                   {unreadCount}
                 </span>
               )}
-              {href === '/dashboard/friends' && friendRequestCount > 0 && (
+              {href === '/friends' && friendRequestCount > 0 && (
                 <span className="absolute -top-1 -right-2 bg-primary text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full z-10">
                   {friendRequestCount}
                 </span>
               )}
             </span>
-            <span className="text-[10px] font-medium mt-1 truncate max-w-[60px] text-center">{t[labelKey]}</span>
+            <span className="text-[9px] font-bold mt-1 truncate max-w-[50px] text-center font-bangla">{t[labelKey]}</span>
           </Link>
         ))}
       </nav>
 
-      {/* Mobile Top Header */}
-      <div className="md:hidden flex items-center justify-between p-4 bg-white border-b border-cream-dark sticky top-0 z-40">
-        <Link href="/dashboard" className="flex items-center gap-2">
-          <p className="font-bold text-primary text-2xl font-bangla tracking-tight select-none">ঈদ চান্দা</p>
-        </Link>
-        <button onClick={() => setLang(lang === 'bn' ? 'en' : 'bn')} className="text-[10px] font-bold bg-cream px-3 py-1.5 rounded-full border border-cream-dark text-primary flex items-center gap-1.5 shadow-sm">
-          <i className="fa-solid fa-language text-xs opacity-60"></i>
-          {lang === 'bn' ? 'English' : 'বাংলা'}
-        </button>
+      {/* Mobile Top Header + Aux Nav */}
+      <div className="md:hidden flex flex-col bg-white border-b border-cream-dark sticky top-0 z-40">
+        <div className="flex items-center justify-between p-4 px-6">
+          <Link href="/" className="flex items-center gap-2">
+            <p className="font-bold text-primary text-2xl font-bangla tracking-tight select-none">ঈদ চান্দা</p>
+          </Link>
+          <button onClick={() => setLang(lang === 'bn' ? 'en' : 'bn')} className="text-[10px] font-bold bg-cream px-3 py-1.5 rounded-full border border-cream-dark text-primary flex items-center gap-1.5 shadow-sm">
+            <i className="fa-solid fa-language text-xs opacity-60"></i>
+            {lang === 'bn' ? 'English' : 'বাংলা'}
+          </button>
+        </div>
+        {/* Mobile Sub-Header Links for Dua Wall and About */}
+        <div className="flex items-center justify-center gap-6 pb-3 px-4">
+          {auxNav.map(({ href, labelKey, icon }) => (
+            <Link
+              key={href}
+              href={href}
+              className={`flex items-center gap-2 text-xs font-bold px-3 py-1.5 rounded-lg transition-all ${pathname === href ? "bg-primary/10 text-primary" : "text-gray-500 hover:text-primary"}`}
+            >
+              <span className="text-sm opacity-70">{icon}</span>
+              <span className="font-bangla">{t[labelKey]}</span>
+            </Link>
+          ))}
+        </div>
       </div>
 
       {/* Desktop Sidebar (Icon + Text) */}
       <aside className="hidden md:flex w-64 shrink-0 border-r border-cream-dark bg-white flex-col h-screen sticky top-0 py-6">
         <div className="px-6 mb-8 relative flex items-center justify-between">
-          <Link href="/dashboard" className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2">
             <p className="font-bold text-primary text-2xl font-bangla tracking-tight select-none mt-1">ঈদ চান্দা</p>
           </Link>
           <button
@@ -174,7 +194,7 @@ export function DashboardSidebar({ user }: { user: User | null }) {
         </div>
 
         <nav className="flex-1 w-full px-4 space-y-1 overflow-y-auto">
-          {nav.map(({ href, labelKey, icon }) => (
+          {allNav.map(({ href, labelKey, icon }) => (
             <Link
               key={href}
               href={href}
@@ -185,16 +205,16 @@ export function DashboardSidebar({ user }: { user: User | null }) {
             >
               <div className="flex items-center gap-3">
                 <span className="text-lg">{icon}</span>
-                <span>{t[labelKey]}</span>
+                <span className="font-bangla">{t[labelKey]}</span>
               </div>
               <div className="flex items-center gap-1">
-                {href === '/dashboard/messages' && unreadCount > 0 && (
-                  <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                {href === '/messages' && unreadCount > 0 && (
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${pathname === href ? "bg-white text-primary" : "bg-red-500 text-white"}`}>
                     {unreadCount}
                   </span>
                 )}
-                {href === '/dashboard/friends' && friendRequestCount > 0 && (
-                  <span className="bg-white text-primary text-[10px] font-bold px-2 py-0.5 rounded-full">
+                {href === '/friends' && friendRequestCount > 0 && (
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${pathname === href ? "bg-white text-primary" : "bg-primary text-white"}`}>
                     {friendRequestCount}
                   </span>
                 )}
@@ -208,7 +228,7 @@ export function DashboardSidebar({ user }: { user: User | null }) {
             <button
               type="button"
               onClick={signOut}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-red-500 hover:bg-red-50 hover:text-red-700 transition"
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-red-500 hover:bg-red-50 hover:text-red-700 transition font-bangla"
             >
               <i className="fa-solid fa-arrow-right-from-bracket text-lg"></i>
               <span>{t["dashboard.logout"]}</span>
