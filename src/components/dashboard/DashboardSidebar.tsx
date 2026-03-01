@@ -71,15 +71,21 @@ export function DashboardSidebar({ user }: { user: User }) {
           setFriendRequestCount(prev => prev + 1);
         }
       })
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'friendships' }, payload => {
-        if (payload.old && payload.new && payload.old.status === 'pending' && payload.new.status !== 'pending' && payload.old.action_user_id !== user.id) {
-          setFriendRequestCount(prev => Math.max(0, prev - 1));
-        }
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'friendships' }, async payload => {
+        const { count: requestCount } = await supabase
+          .from("friendships")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "pending")
+          .neq("action_user_id", user.id);
+        if (requestCount !== null) setFriendRequestCount(requestCount);
       })
-      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'friendships' }, payload => {
-        if (payload.old && payload.old.status === 'pending' && payload.old.action_user_id !== user.id) {
-          setFriendRequestCount(prev => Math.max(0, prev - 1));
-        }
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'friendships' }, async payload => {
+        const { count: requestCount } = await supabase
+          .from("friendships")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "pending")
+          .neq("action_user_id", user.id);
+        if (requestCount !== null) setFriendRequestCount(requestCount);
       })
       .subscribe();
 
