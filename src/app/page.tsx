@@ -16,15 +16,30 @@ function HomeContent() {
     async function checkUser() {
       const supabase = createClient();
       const { data: { session } } = await supabase.auth.getSession();
+
       if (session) {
         setIsAuthenticated(true);
-        router.push("/dashboard");
+        // Instant redirect if session exists
+        router.replace("/dashboard");
       }
     }
     checkUser();
 
+    // Listen for auth state changes to catch successful login immediately
+    const supabase = createClient();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" && session) {
+        setIsAuthenticated(true);
+        router.replace("/dashboard");
+      }
+    });
+
     const err = searchParams.get("error");
     if (err) setError(err);
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [searchParams, router]);
 
   async function signInWithGoogle() {
