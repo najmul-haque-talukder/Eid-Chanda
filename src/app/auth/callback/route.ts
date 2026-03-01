@@ -7,8 +7,8 @@ export async function GET(request: Request) {
   const next = searchParams.get("next") ?? "/dashboard";
 
   // Robustly detect the origin for the redirect
-  const host = request.headers.get("host");
-  const protocol = host?.includes("localhost") ? "http" : "https";
+  const host = request.headers.get("x-forwarded-host") || request.headers.get("host");
+  const protocol = request.headers.get("x-forwarded-proto") || (host?.includes("localhost") ? "http" : "https");
   const finalOrigin = `${protocol}://${host}`;
 
   if (code) {

@@ -17,8 +17,8 @@ export default async function SentPage({ searchParams }: Props) {
     .order("created_at", { ascending: false });
 
   const headersList = await (await import("next/headers")).headers();
-  const host = headersList.get("host") || "";
-  const protocol = host.includes("localhost") ? "http" : "https";
+  const host = headersList.get("x-forwarded-host") || headersList.get("host") || "";
+  const protocol = headersList.get("x-forwarded-proto") || (host.includes("localhost") ? "http" : "https");
   const baseUrl = `${protocol}://${host}`;
   const createdSlug = (await searchParams).created;
 
