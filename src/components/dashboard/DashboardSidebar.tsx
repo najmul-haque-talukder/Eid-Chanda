@@ -14,10 +14,11 @@ const mainNav = [
   { href: "/received", labelKey: "dashboard.received", icon: <i className="fa-solid fa-inbox fa-fw"></i> },
   { href: "/friends", labelKey: "dashboard.friends", icon: <i className="fa-solid fa-users fa-fw"></i> },
   { href: "/messages", labelKey: "dashboard.messages", icon: <i className="fa-solid fa-comment-dots fa-fw"></i> },
+  { href: "/public-dua", labelKey: "dashboard.publicDua", icon: <i className="fa-solid fa-book-quran fa-fw"></i> },
 ];
 
 const auxNav = [
-  { href: "/dua-wall", labelKey: "dashboard.duawall", icon: <i className="fa-solid fa-person-praying fa-fw"></i> },
+  { href: "/dua-wall", labelKey: "dashboard.duawall", icon: <i className="fa-solid fa-book-quran fa-fw"></i> },
   { href: "/about", labelKey: "dashboard.about", icon: <i className="fa-solid fa-info-circle fa-fw"></i> },
 ];
 
@@ -36,74 +37,53 @@ export function DashboardSidebar({ user }: { user: User | null }) {
 
   useEffect(() => {
     if (!user) return;
-    // 1. Fetch initial unread count
-    async function fetchUnread() {
-      const supabase = createClient();
-      const { count } = await supabase
-        .from("messages")
-        .select("*", { count: "exact", head: true })
-        .eq("receiver_id", user!.id)
-        .eq("is_read", false);
-      if (count !== null) setUnreadCount(count);
-
-      const { count: requestCount } = await supabase
-        .from("friendships")
-        .select("*", { count: "exact", head: true })
-        .eq("status", "pending")
-        .neq("action_user_id", user!.id);
-      if (requestCount !== null) setFriendRequestCount(requestCount);
-    }
-    fetchUnread();
-
-    // 2. Subscribe to realtime changes
     const supabase = createClient();
-    const sub = supabase
-      .channel('public:messages')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `receiver_id=eq.${user.id}` }, payload => {
-        if (payload.new && !payload.new.is_read) {
-          setUnreadCount(prev => prev + 1);
+
+    let isMounted = true;
+
+    async function fetchCounts() {
+      try {
+        const [msgRes, friendRes] = await Promise.all([
+          supabase
+            .from("messages")
+            .select("*", { count: "exact", head: true })
+            .eq("receiver_id", user!.id)
+            .eq("is_read", false),
+          supabase
+            .from("friendships")
+            .select("*", { count: "exact", head: true })
+            .eq("status", "pending")
+            .or(`user_id1.eq.${user!.id},user_id2.eq.${user!.id}`)
+            .neq("action_user_id", user!.id)
+        ]);
+
+        if (isMounted) {
+          if (msgRes.count !== null) setUnreadCount(msgRes.count);
+          if (friendRes.count !== null) setFriendRequestCount(friendRes.count);
         }
-      })
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages', filter: `receiver_id=eq.${user.id}` }, async payload => {
-        const { count } = await supabase
-          .from("messages")
-          .select("*", { count: "exact", head: true })
-          .eq("receiver_id", user.id)
-          .eq("is_read", false);
-        if (count !== null) setUnreadCount(count);
-      })
+      } catch (e) {
+        console.error("Sidebar count fetch failed:", e);
+      }
+    }
+
+    fetchCounts();
+
+    const channel1 = supabase
+      .channel('sidebar-messages-' + user.id)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, fetchCounts)
       .subscribe();
 
-    const subFriends = supabase
-      .channel('public:friendships_sidebar')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'friendships', filter: 'status=eq.pending' }, payload => {
-        if (payload.new && payload.new.action_user_id !== user.id) {
-          setFriendRequestCount(prev => prev + 1);
-        }
-      })
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'friendships' }, async payload => {
-        const { count: requestCount } = await supabase
-          .from("friendships")
-          .select("*", { count: "exact", head: true })
-          .eq("status", "pending")
-          .neq("action_user_id", user.id);
-        if (requestCount !== null) setFriendRequestCount(requestCount);
-      })
-      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'friendships' }, async payload => {
-        const { count: requestCount } = await supabase
-          .from("friendships")
-          .select("*", { count: "exact", head: true })
-          .eq("status", "pending")
-          .neq("action_user_id", user.id);
-        if (requestCount !== null) setFriendRequestCount(requestCount);
-      })
+    const channel2 = supabase
+      .channel('sidebar-friendships-' + user.id)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'friendships' }, fetchCounts)
       .subscribe();
 
     return () => {
-      supabase.removeChannel(sub);
-      supabase.removeChannel(subFriends);
+      isMounted = false;
+      supabase.removeChannel(channel1);
+      supabase.removeChannel(channel2);
     };
-  }, [user]);
+  }, [user?.id]);
 
   async function signOut() {
     const supabase = createClient();

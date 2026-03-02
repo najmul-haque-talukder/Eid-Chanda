@@ -1,17 +1,25 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { useState, useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { DashboardRightSidebar } from "@/components/dashboard/DashboardRightSidebar";
 
-export function HeaderHider({ children, user }: { children: React.ReactNode, user: any }) {
+export function HeaderHider({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
+    const [user, setUser] = useState<any>(null);
+
+    useEffect(() => {
+        const supabase = createClient();
+        supabase.auth.getUser().then(({ data: { user } }) => setUser(user));
+    }, []);
 
     // Pages that should NOT have the dashboard layout (public views)
     const isPublicPage =
         pathname === "/auth/callback" ||
         pathname?.startsWith("/k/") ||
-        (pathname !== "/" && !["/send", "/sent", "/received", "/friends", "/messages", "/dua-wall", "/about", "/card", "/archive"].includes(pathname));
+        (pathname !== "/" && !["/send", "/sent", "/received", "/friends", "/messages", "/dua-wall", "/public-dua", "/about", "/card", "/archive"].includes(pathname));
 
     if (isPublicPage) {
         return <>{children}</>;

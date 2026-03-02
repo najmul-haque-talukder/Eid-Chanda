@@ -234,7 +234,7 @@ export function FriendsManager({ currentUserId }: { currentUserId: string }) {
                                     </div>
                                 </div>
                                 <a
-                                    href={`/dashboard/messages?to=${user.id}`}
+                                    href={`/messages?to=${user.id}`}
                                     className="px-4 py-2 bg-white border border-primary text-primary text-sm font-bold rounded-xl hover:bg-primary hover:text-white shadow-sm transition-all whitespace-nowrap ml-auto sm:ml-0"
                                 >
                                     Message

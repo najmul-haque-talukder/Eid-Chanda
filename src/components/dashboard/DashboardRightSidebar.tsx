@@ -20,7 +20,7 @@ export function DashboardRightSidebar() {
                         ? 'ডিজিটাল সালামি কার্ড তৈরি করুন এবং বন্ধুদের সাথে আনন্দ ভাগাভাগি করুন।'
                         : 'Create digital Salami cards and share the joy with your friends.'}
                 </p>
-                <Link href="/dashboard/send" className="inline-block bg-white text-primary text-xs font-bold px-4 py-2 rounded-xl shadow-sm hover:-translate-y-0.5 transition">
+                <Link href="/send" className="inline-block bg-white text-primary text-xs font-bold px-4 py-2 rounded-xl shadow-sm hover:-translate-y-0.5 transition">
                     {lang === 'bn' ? 'সালামি পাঠান' : 'Send Salami'}
                 </Link>
             </div>
@@ -31,9 +31,9 @@ export function DashboardRightSidebar() {
                     {lang === 'bn' ? 'কুইক অ্যাকশন' : 'Quick Actions'}
                 </h4>
                 <div className="space-y-2">
-                    <Link href="/dashboard/dua-wall" className="flex items-center gap-3 p-3 rounded-xl hover:bg-cream transition group">
+                    <Link href="/dua-wall" className="flex items-center gap-3 p-3 rounded-xl hover:bg-cream transition group">
                         <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center group-hover:bg-blue-100 transition">
-                            <i className="fa-solid fa-person-praying text-lg"></i>
+                            <i className="fa-solid fa-book-quran text-lg"></i>
                         </div>
                         <div>
                             <p className="text-sm font-bold text-gray-800">{lang === 'bn' ? 'দোয়া লিখুন' : 'Write a Dua'}</p>
@@ -41,7 +41,7 @@ export function DashboardRightSidebar() {
                         </div>
                     </Link>
 
-                    <Link href="/dashboard/friends" className="flex items-center gap-3 p-3 rounded-xl hover:bg-cream transition group">
+                    <Link href="/friends" className="flex items-center gap-3 p-3 rounded-xl hover:bg-cream transition group">
                         <div className="w-10 h-10 rounded-full bg-orange-50 text-orange-500 flex items-center justify-center group-hover:bg-orange-100 transition">
                             <i className="fa-solid fa-user-plus"></i>
                         </div>

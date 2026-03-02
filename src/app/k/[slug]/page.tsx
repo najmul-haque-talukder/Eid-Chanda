@@ -7,32 +7,40 @@ type Props = { params: Promise<{ slug: string }> };
 export default async function KhamOpenPage({ params }: Props) {
   const { slug } = await params;
   const supabase = await createClient();
-  const { data: kham } = await supabase
+  const { data: kham, error } = await supabase
     .from("khams")
-    .select("id, receiver_name, amount, letter_text, anonymous, voice_url, location, scheduled_at, delivered_at, created_at, sender_id, reaction, auto_destruct, payment_method, payment_number")
+    .select("id, receiver_name, amount, letter_text, anonymous, voice_url, location, scheduled_at, delivered_at, created_at, sender_id, auto_destruct, payment_method, payment_number, slug")
     .eq("slug", slug)
     .single();
 
-  if (!kham) notFound();
+  if (error || !kham) {
+    if (error) console.error("Kham Fetch Error Details:", JSON.stringify(error, null, 2));
+    notFound();
+  }
 
-  let senderName: string | null = null;
-  let senderAvatar: string | null = null;
+  let senderProfile: any = null;
   if (!kham.anonymous && kham.sender_id) {
     const { data } = await supabase
       .from("profiles")
-      .select("full_name, username, avatar_url")
+      .select("full_name, username, avatar_url, bkash_number, nagad_number, rocket_number, upay_number, dbbl_number")
       .eq("id", kham.sender_id)
       .single();
-    senderName = data?.full_name || data?.username || null;
-    senderAvatar = data?.avatar_url || null;
+    senderProfile = data;
   }
 
   return (
     <KhamEnvelopeExperience
       kham={{
         ...kham,
-        sender_name: senderName,
-        sender_avatar: senderAvatar,
+        sender_name: senderProfile?.full_name || senderProfile?.username || null,
+        sender_avatar: senderProfile?.avatar_url || null,
+        sender_payments: senderProfile ? {
+          bkash: senderProfile.bkash_number,
+          nagad: senderProfile.nagad_number,
+          rocket: senderProfile.rocket_number,
+          upay: senderProfile.upay_number,
+          dbbl: senderProfile.dbbl_number
+        } : null
       }}
     />
   );

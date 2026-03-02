@@ -1,202 +1,509 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
-
+import { useRouter } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
+import { useToast } from "@/components/ToastContext";
 
-export function ProfileManager({ initialProfile, user }: { initialProfile: any; user: User | null }) {
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+export function ProfileManager({
+  initialProfile,
+  user,
+}: {
+  initialProfile: any;
+  user: User | null;
+}) {
+  const router = useRouter();
+  const { showToast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-    async function signInWithGoogle() {
-        setLoading(true);
-        setError(null);
-        const supabase = createClient();
-        const { error } = await supabase.auth.signInWithOAuth({
-            provider: "google",
-            options: { redirectTo: `${window.location.origin}/auth/callback` },
+  // Auth UI States
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+
+  // Registration Form
+  const [regName, setRegName] = useState("");
+  const [regUsername, setRegUsername] = useState("");
+  const [regEmail, setRegEmail] = useState("");
+  const [regPassword, setRegPassword] = useState("");
+  const [loginId, setLoginId] = useState("");
+
+  // Profile & Card Data
+  const [fullName, setFullName] = useState(initialProfile?.full_name || "");
+  const [username, setUsername] = useState(initialProfile?.username || "");
+  const [avatarUrl, setAvatarUrl] = useState(initialProfile?.avatar_url || "");
+  const [cardQuote, setCardQuote] = useState(initialProfile?.card_quote || "");
+  const [bkash, setBkash] = useState(initialProfile?.bkash_number || "");
+  const [nagad, setNagad] = useState(initialProfile?.nagad_number || "");
+  const [rocket, setRocket] = useState(initialProfile?.rocket_number || "");
+  const [upay, setUpay] = useState(initialProfile?.upay_number || "");
+  const [dbbl, setDbbl] = useState(initialProfile?.dbbl_number || "");
+
+  const [saving, setSaving] = useState(false);
+  const [savedSuccess, setSavedSuccess] = useState(false);
+
+  // --- AUTH HANDLER ---
+  async function handleAuth(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    const supabase = createClient();
+
+    if (isSignUp) {
+      const { error: signUpError, data } = await supabase.auth.signUp({
+        email: regEmail,
+        password: regPassword,
+        options: {
+          data: {
+            full_name: regName,
+            username: regUsername.toLowerCase().trim(),
+          },
+        },
+      });
+      if (signUpError) setError(signUpError.message);
+      else if (data.user) {
+        setIsSignUp(false);
+        setLoginId(regEmail);
+      }
+    } else {
+      let email = loginId.trim();
+      if (!email.includes("@")) {
+        const { data: p } = await supabase
+          .from("profiles")
+          .select("email")
+          .eq("username", email.toLowerCase())
+          .single();
+        if (p?.email) email = p.email;
+      }
+      const { error: signInError, data: signInData } =
+        await supabase.auth.signInWithPassword({
+          email,
+          password: regPassword,
         });
-        if (error) {
-            setError(error.message);
-            setLoading(false);
-        }
+      if (signInError) setError(signInError.message);
+      else if (signInData.session) router.refresh();
     }
+    setLoading(false);
+  }
 
-    if (!user) {
-        return (
-            <div className="mt-8 space-y-6">
-                <div className="bg-white p-8 rounded-3xl border-2 border-dashed border-cream-dark flex flex-col items-center justify-center text-center space-y-6 min-h-[400px]">
-                    <div className="w-24 h-24 bg-cream rounded-full flex items-center justify-center text-4xl text-gray-300">
-                        <i className="fa-solid fa-user-lock"></i>
-                    </div>
-                    <div>
-                        <h3 className="text-xl font-bold text-gray-900">Your profile is locked</h3>
-                        <p className="text-gray-500 max-w-xs mt-2 text-sm leading-relaxed">
-                            Log in with Google to create your Salami Request Card and start sending digital Khāms.
-                        </p>
-                    </div>
+  // --- PROFILE SAVE ---
+  async function handleSaveProfile(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    setSavedSuccess(false);
+    const supabase = createClient();
 
-                    {error && (
-                        <div className="bg-red-50 text-red-600 p-3 rounded-xl text-xs border border-red-100">
-                            {error}
-                        </div>
-                    )}
+    const { error } = await supabase.from("profiles").upsert({
+      id: user!.id,
+      full_name: fullName,
+      username: username.toLowerCase().trim(),
+      avatar_url: avatarUrl,
+      card_quote: cardQuote,
+      bkash_number: bkash,
+      nagad_number: nagad,
+      rocket_number: rocket,
+      upay_number: upay,
+      dbbl_number: dbbl,
+      updated_at: new Date().toISOString(),
+    });
 
-                    <button
-                        type="button"
-                        onClick={signInWithGoogle}
-                        disabled={loading}
-                        className="flex items-center justify-center gap-3 px-8 py-4 rounded-2xl border border-gray-300 bg-white hover:bg-gray-50 font-bold text-gray-700 disabled:opacity-60 transition shadow-sm group"
-                    >
-                        <svg className="w-6 h-6 group-hover:scale-110 transition-transform" viewBox="0 0 24 24">
-                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-                        </svg>
-                        {loading ? "Logging in..." : "Login with Google"}
-                    </button>
-                </div>
-
-                {/* Blank placeholders as requested */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="h-40 bg-gray-50/50 rounded-2xl border border-dashed border-gray-100"></div>
-                    <div className="h-40 bg-gray-50/50 rounded-2xl border border-dashed border-gray-100"></div>
-                </div>
-            </div>
-        );
+    if (!error) {
+      setSavedSuccess(true);
+      router.refresh();
     }
+    setSaving(false);
+  }
 
-    const [saving, setSaving] = useState(false);
-    const [msg, setMsg] = useState("");
+  // --- IMAGE UPLOAD & COMPRESSION ---
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-    // Profile Edit States
-    const [fullName, setFullName] = useState(initialProfile?.full_name || "");
-    const [username, setUsername] = useState(initialProfile?.username || "");
-    const [avatarUrl, setAvatarUrl] = useState(initialProfile?.avatar_url || "");
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const MAX_WIDTH = 400;
+        const MAX_HEIGHT = 400;
+        let width = img.width;
+        let height = img.height;
 
-    // Card Edit States
-    const [cardQuote, setCardQuote] = useState(initialProfile?.card_quote || "");
-    const [bkash, setBkash] = useState(initialProfile?.bkash_number || "");
-    const [nagad, setNagad] = useState(initialProfile?.nagad_number || "");
-    const [rocket, setRocket] = useState(initialProfile?.rocket_number || "");
-    const [upay, setUpay] = useState(initialProfile?.upay_number || "");
-    const [dbbl, setDbbl] = useState(initialProfile?.dbbl_number || "");
-
-    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            setAvatarUrl(reader.result as string);
-        };
-        reader.readAsDataURL(file);
-    };
-
-    async function handleSave(e: React.FormEvent) {
-        e.preventDefault();
-        setSaving(true);
-        setMsg("");
-        const supabase = createClient();
-
-        const { error } = await supabase
-            .from("profiles")
-            .update({
-                full_name: fullName.trim() || null,
-                username: username.trim(),
-                avatar_url: avatarUrl.trim() || null,
-                card_quote: cardQuote.trim() || null,
-                bkash_number: bkash.trim() || null,
-                nagad_number: nagad.trim() || null,
-                rocket_number: rocket.trim() || null,
-                upay_number: upay.trim() || null,
-                dbbl_number: dbbl.trim() || null,
-            })
-            .eq("id", initialProfile.id);
-
-        setSaving(false);
-        if (error) {
-            setMsg(`Error: ${error.message}`);
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
         } else {
-            setMsg("Successfully saved details!");
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
         }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx?.drawImage(img, 0, 0, width, height);
+        const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.7); // 70% quality JPEG
+        setAvatarUrl(compressedDataUrl);
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // --- SHARE LOGIC ---
+  const shareUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/${username}`;
+  const shareText = `সালামি দিন এইখানে! আমার ঈদ কার্ড দেখুন: ${shareUrl}`;
+
+  const handleShare = (platform: "fb" | "wa" | "copy") => {
+    if (platform === "fb")
+      window.open(
+        `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
+        "_blank",
+      );
+    if (platform === "wa")
+      window.open(
+        `https://wa.me/?text=${encodeURIComponent(shareText)}`,
+        "_blank",
+      );
+    if (platform === "copy") {
+      navigator.clipboard.writeText(shareUrl);
+      showToast("Link Copied Successfully! 🎉", "success");
     }
+  };
 
+  if (!user) {
     return (
-        <form onSubmit={handleSave} className="space-y-8 mt-6">
-            {/* Edit Profile Section */}
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-cream-dark space-y-4">
-                <h2 className="text-lg font-bold text-gray-900 border-b pb-2">Edit Profile</h2>
+      <div className="mt-8 bg-white p-8 rounded-[2.5rem] border-2 border-cream-dark shadow-2xl animate-in fade-in zoom-in duration-300">
+        <div className="text-center mb-8">
+          <div className="w-20 h-20 bg-primary/10 text-primary rounded-full flex items-center justify-center text-4xl mx-auto mb-4">
+            <i
+              className={`fa-solid ${isSignUp ? "fa-user-plus" : "fa-lock"}`}
+            ></i>
+          </div>
+          <h2 className="text-3xl font-black text-gray-900">
+            {isSignUp ? "Create Card" : "Sign In"}
+          </h2>
+          <p className="text-gray-500 font-bangla">
+            {isSignUp
+              ? "সহজেই অ্যাকাউন্ট তৈরি করুন"
+              : "আপনার কার্ড ম্যানেজ করতে লগইন করুন"}
+          </p>
+        </div>
 
-                <div className="flex items-center gap-4 mb-4">
-                    <div className="w-16 h-16 rounded-full bg-cream flex items-center justify-center overflow-hidden shrink-0 border">
-                        {avatarUrl ? (
-                            <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-                        ) : (
-                            <span className="text-primary font-bold text-xl">{fullName?.charAt(0) || username.charAt(0)}</span>
-                        )}
-                    </div>
-                </div>
-
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">Full Name</label>
-                    <input type="text" value={fullName} onChange={e => setFullName(e.target.value)} className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-2" placeholder="Rahim Uddin" />
-                </div>
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">Username</label>
-                    <input type="text" value={username} onChange={e => setUsername(e.target.value)} className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-2 bg-gray-50" required />
-                </div>
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">Profile Image (Upload)</label>
-                    <input type="file" accept="image/*" onChange={handleImageUpload} className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20" />
-                </div>
+        <form onSubmit={handleAuth} className="space-y-4">
+          {isSignUp && (
+            <div className="grid grid-cols-2 gap-4">
+              <input
+                type="text"
+                placeholder="Full Name"
+                value={regName}
+                onChange={(e) => setRegName(e.target.value)}
+                className="w-full px-5 py-4 rounded-2xl border-2 border-cream-dark focus:border-primary outline-none font-semibold"
+                required
+              />
+              <input
+                type="text"
+                placeholder="Username"
+                value={regUsername}
+                onChange={(e) => setRegUsername(e.target.value)}
+                className="w-full px-5 py-4 rounded-2xl border-2 border-cream-dark focus:border-primary outline-none font-semibold"
+                required
+              />
             </div>
-
-            {/* Add Your Card Feature */}
-            <div className="bg-primary/5 p-6 rounded-2xl shadow-sm border border-primary/20 space-y-4">
-                <h2 className="text-lg font-bold text-primary border-b border-primary/10 pb-2">Add Your Salami Card 💳</h2>
-                <p className="text-sm text-gray-600">Create a beautiful card with a quote and your payment numbers to share on Facebook!</p>
-
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">Card Quote / Letter</label>
-                    <textarea value={cardQuote} onChange={e => setCardQuote(e.target.value)} className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-2 font-bangla" placeholder="Eid Mubarak! Salami din bkash e..." rows={3} />
-                </div>
-                <div>
-                    <label className="block text-sm flex items-center gap-2 font-medium text-pink-600 font-bold"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/BKash_logo.svg/1200px-BKash_logo.svg.png" className="h-6 object-contain" alt="" onError={(e) => (e.currentTarget.style.display = 'none')} /> bKash Number</label>
-                    <input type="text" value={bkash} onChange={e => setBkash(e.target.value)} className="mt-1 block w-full rounded-xl border border-pink-200 px-4 py-2 focus:ring-pink-500" placeholder="+8801700000000" />
-                </div>
-                <div>
-                    <label className="block text-sm flex items-center gap-2 font-medium text-orange-600 font-bold"><img src="https://download.logo.wine/logo/Nagad/Nagad-Logo.wine.png" className="h-6 object-contain" alt="" onError={(e) => (e.currentTarget.style.display = 'none')} /> Nagad Number</label>
-                    <input type="text" value={nagad} onChange={e => setNagad(e.target.value)} className="mt-1 block w-full rounded-xl border border-orange-200 px-4 py-2 focus:ring-orange-500" placeholder="+8801600000000" />
-                </div>
-                <div>
-                    <label className="block text-sm flex items-center gap-2 font-medium text-purple-600 font-bold"><img src="https://play-lh.googleusercontent.com/1nIQpQ8hD_PtyYhNIFdCHv8C3g-Uj8u-VdAYC-sU5M5JzNnU0T3y81x-Z1LhK87Gkw" className="h-6 rounded-md object-contain" alt="" onError={(e) => (e.currentTarget.style.display = 'none')} /> Rocket Number</label>
-                    <input type="text" value={rocket} onChange={e => setRocket(e.target.value)} className="mt-1 block w-full rounded-xl border border-purple-200 px-4 py-2 focus:ring-purple-500" placeholder="+8801900000000" />
-                </div>
-                <div>
-                    <label className="block text-sm flex items-center gap-2 font-medium text-blue-600 font-bold"><img src="https://play-lh.googleusercontent.com/yv-z0UXXE9m_c0rI_Z-6j2aO2x5n8M8l_qJ7k5R8T_A2K7o_-lK4B_H8-p7h_8A3" className="h-6 rounded-md object-contain" alt="" onError={(e) => (e.currentTarget.style.display = 'none')} /> Upay Number</label>
-                    <input type="text" value={upay} onChange={e => setUpay(e.target.value)} className="mt-1 block w-full rounded-xl border border-blue-200 px-4 py-2 focus:ring-blue-500" placeholder="+8801400000000" />
-                </div>
-                <div>
-                    <label className="block text-sm flex items-center gap-2 font-medium text-gray-800 font-bold"><img src="https://www.dutchbanglabank.com/img/dbbl-logo.png" className="h-6 object-contain bg-white rounded-md p-1" alt="" onError={(e) => (e.currentTarget.style.display = 'none')} /> DBBL / Nexus</label>
-                    <input type="text" value={dbbl} onChange={e => setDbbl(e.target.value)} className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-2 focus:ring-gray-500" placeholder="Account Number" />
-                </div>
-
-                <div className="pt-4 flex items-center gap-4 flex-wrap">
-                    <button type="submit" disabled={saving} className="rounded-xl bg-primary px-8 py-3 text-white font-bold hover:bg-primary-dark shadow-md transition disabled:opacity-50">
-                        {saving ? "Saving..." : "Save Details & Generate Card"}
-                    </button>
-                    {msg && <p className={`text-sm ${msg.includes("Error") ? "text-red-500" : "text-green-600 font-bold"}`}>{msg}</p>}
-
-                    {/* Show buttons if card exists */}
-                    {(cardQuote || bkash || nagad) && msg.includes("Success") && (
-                        <div className="w-full mt-4 flex gap-2">
-                            <a href={`/${username}`} target="_blank" rel="noreferrer" className="flex-1 text-center bg-gray-900 text-white rounded-xl px-4 py-3 font-medium hover:bg-black transition">View My Card 👀</a>
-                        </div>
-                    )}
-                </div>
+          )}
+          <input
+            type={isSignUp ? "email" : "text"}
+            placeholder={isSignUp ? "Email Address" : "Username or Email"}
+            value={isSignUp ? regEmail : loginId}
+            onChange={(e) =>
+              isSignUp
+                ? setRegEmail(e.target.value)
+                : setLoginId(e.target.value)
+            }
+            className="w-full px-5 py-4 rounded-2xl border-2 border-cream-dark focus:border-primary outline-none font-semibold"
+            required
+          />
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              placeholder="Password"
+              value={regPassword}
+              onChange={(e) => setRegPassword(e.target.value)}
+              className="w-full px-5 py-4 rounded-2xl border-2 border-cream-dark focus:border-primary outline-none font-semibold pr-14"
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-300 hover:text-primary"
+            >
+              <i
+                className={`fa-solid ${showPassword ? "fa-eye-slash" : "fa-eye"}`}
+              ></i>
+            </button>
+          </div>
+          {error && (
+            <div className="text-red-500 text-sm font-bold bg-red-50 p-4 rounded-xl border border-red-100">
+              {error}
             </div>
+          )}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-primary text-white font-black py-5 rounded-2xl shadow-xl hover:bg-primary-dark transition-all"
+          >
+            {loading
+              ? "AUTHENTICATING..."
+              : isSignUp
+                ? "JOIN EID CHANDA"
+                : "LOG IN NOW"}
+          </button>
         </form>
+        <button
+          onClick={() => setIsSignUp(!isSignUp)}
+          className="w-full mt-6 text-primary font-bold hover:underline"
+        >
+          {isSignUp ? "Already a member? Sign In" : "New? Create an account"}
+        </button>
+      </div>
     );
+  }
+
+  return (
+    <div className="mt-8 space-y-8 animate-in slide-in-from-bottom-5 duration-500">
+      {/* --- TOP PROFILE HEADER --- */}
+      <div className="bg-white p-8 rounded-[2.5rem] border-2 border-cream-dark shadow-xl text-center relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-24 bg-primary/5"></div>
+        <div className="relative z-10">
+          <div
+            className="w-32 h-32 mx-auto rounded-full border-4 border-white shadow-xl bg-cream flex items-center justify-center overflow-hidden mb-4 group cursor-pointer relative"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            {avatarUrl ? (
+              <img
+                src={avatarUrl}
+                className="w-full h-full object-cover rounded-full"
+              />
+            ) : (
+              <span className="text-3xl font-black text-primary">
+                {fullName.charAt(0) || "U"}
+              </span>
+            )}
+            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity rounded-full">
+              <i className="fa-solid fa-camera text-white text-xl"></i>
+            </div>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleImageUpload}
+              className="hidden"
+              accept="image/*"
+            />
+          </div>
+          <h2 className="text-2xl font-black text-gray-900">
+            {fullName || "Your Name"}
+          </h2>
+          <p className="text-primary font-bold text-sm bg-primary/5 px-4 py-1 rounded-full inline-block">
+            @{username}
+          </p>
+        </div>
+        <button
+          onClick={async () => {
+            await createClient().auth.signOut();
+            router.refresh();
+          }}
+          className="absolute top-6 right-6 text-gray-300 hover:text-red-500 transition-colors"
+        >
+          <i className="fa-solid fa-sign-out text-xl"></i>
+        </button>
+      </div>
+
+      {/* --- CARD EDIT FORM --- */}
+      <form
+        onSubmit={handleSaveProfile}
+        className="bg-white p-8 rounded-[2.5rem] border-2 border-cream-dark shadow-xl space-y-6"
+      >
+        <div className="border-b-2 border-cream pb-4 mb-4">
+          <h3 className="text-xl font-black text-gray-900 flex items-center gap-2">
+            <i className="fa-solid fa-pen-to-square text-primary"></i> Edit Card
+            Details
+          </h3>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-1">
+            <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">
+              Full Name
+            </label>
+            <input
+              type="text"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              className="w-full px-5 py-3 rounded-2xl bg-cream/30 border-2 border-cream focus:border-primary outline-none font-bold"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">
+              Username (URL)
+            </label>
+            <input
+              type="text"
+              value={username}
+              className="w-full px-5 py-3 rounded-2xl bg-cream/30 border-2 border-cream focus:border-primary outline-none font-bold opacity-50 cursor-not-allowed"
+              disabled
+            />
+          </div>
+        </div>
+
+        <div className="space-y-1">
+          <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">
+            Eid Quote / Message
+          </label>
+          <textarea
+            value={cardQuote}
+            onChange={(e) => setCardQuote(e.target.value)}
+            className="w-full px-5 py-4 rounded-2xl bg-cream/30 border-2 border-cream focus:border-primary outline-none font-medium font-bangla h-24"
+            placeholder="ঈদ মোবারক! এই ঈদে সালামি দিন এখানে..."
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* bKash */}
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-pink-600 flex items-center gap-1 uppercase ml-1">
+              <i className="fa-solid fa-mobile-screen"></i> bKash
+            </label>
+            <input
+              type="text"
+              value={bkash}
+              onChange={(e) => setBkash(e.target.value)}
+              className="w-full px-5 py-3 rounded-2xl border-2 border-pink-100 focus:border-pink-500 outline-none font-bold text-sm"
+              placeholder="Number"
+            />
+          </div>
+          {/* Nagad */}
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-orange-600 flex items-center gap-1 uppercase ml-1">
+              <i className="fa-solid fa-mobile-screen"></i> Nagad
+            </label>
+            <input
+              type="text"
+              value={nagad}
+              onChange={(e) => setNagad(e.target.value)}
+              className="w-full px-5 py-3 rounded-2xl border-2 border-orange-100 focus:border-orange-500 outline-none font-bold text-sm"
+              placeholder="Number"
+            />
+          </div>
+          {/* Rocket */}
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-purple-600 flex items-center gap-1 uppercase ml-1">
+              <i className="fa-solid fa-mobile-screen"></i> Rocket
+            </label>
+            <input
+              type="text"
+              value={rocket}
+              onChange={(e) => setRocket(e.target.value)}
+              className="w-full px-5 py-3 rounded-2xl border-2 border-purple-100 focus:border-purple-500 outline-none font-bold text-sm"
+              placeholder="Number"
+            />
+          </div>
+          {/* Upay */}
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-blue-600 flex items-center gap-1 uppercase ml-1">
+              <i className="fa-solid fa-mobile-screen"></i> Upay
+            </label>
+            <input
+              type="text"
+              value={upay}
+              onChange={(e) => setUpay(e.target.value)}
+              className="w-full px-5 py-3 rounded-2xl border-2 border-blue-100 focus:border-blue-500 outline-none font-bold text-sm"
+              placeholder="Number"
+            />
+          </div>
+          {/* DBBL */}
+          <div className="space-y-1 lg:col-span-2">
+            <label className="text-xs font-bold text-red-600 flex items-center gap-1 uppercase ml-1">
+              <i className="fa-solid fa-building-columns"></i> Dutch Bangla Bank
+              / Nexus
+            </label>
+            <input
+              type="text"
+              value={dbbl}
+              onChange={(e) => setDbbl(e.target.value)}
+              className="w-full px-5 py-3 rounded-2xl border-2 border-red-100 focus:border-red-500 outline-none font-bold text-sm"
+              placeholder="Account Number"
+            />
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          disabled={saving}
+          className="w-full bg-primary text-white font-black py-4 rounded-2xl shadow-lg hover:shadow-primary/30 transition-all flex items-center justify-center gap-2"
+        >
+          {saving ? (
+            "SAVING..."
+          ) : (
+            <>
+              <i className="fa-solid fa-circle-check"></i> Save & Update My Card
+            </>
+          )}
+        </button>
+      </form>
+
+      {/* --- SHARE SECTION --- */}
+      {(savedSuccess || cardQuote) && (
+        <div className="bg-primary/5 p-8 rounded-[2.5rem] border-2 border-primary/20 shadow-xl space-y-6">
+          <div className="text-center">
+            <h3 className="text-2xl font-black text-primary">
+              <i className="fa-solid fa-bullhorn mr-2"></i> Card is Live!
+            </h3>
+            <p className="text-sm font-bold text-primary/60 mt-1">
+              Share your link to receive Salami
+            </p>
+          </div>
+
+          <div className="bg-white p-4 rounded-2xl border-2 border-primary/20 flex items-center gap-3">
+            <div className="flex-1 truncate font-bold text-sm text-gray-500">
+              {shareUrl}
+            </div>
+            <button
+              onClick={() => handleShare("copy")}
+              className="bg-primary text-white p-2 px-4 rounded-xl text-xs font-black"
+            >
+              COPY
+            </button>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <button
+              onClick={() => handleShare("fb")}
+              className="bg-[#1877F2] text-white py-4 rounded-2xl font-black flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+            >
+              <i className="fa-brands fa-facebook-f"></i> FACEBOOK
+            </button>
+            <button
+              onClick={() => handleShare("wa")}
+              className="bg-[#25D366] text-white py-4 rounded-2xl font-black flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+            >
+              <i className="fa-brands fa-whatsapp"></i> WHATSAPP
+            </button>
+          </div>
+
+          <a
+            href={`/${username}`}
+            target="_blank"
+            className="block text-center text-primary font-black hover:underline"
+          >
+            VIEW MY LIVE CARD <i className="fa-solid fa-eye ml-2"></i>
+          </a>
+        </div>
+      )}
+    </div>
+  );
 }

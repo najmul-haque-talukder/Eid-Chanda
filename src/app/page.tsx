@@ -29,7 +29,7 @@ export default async function HomePage() {
 
       <ProfileManager initialProfile={profile} user={user} />
 
-      {user && <EidInsightDashboard />}
+      <EidInsightDashboard userId={user?.id} />
     </div>
   );
 }

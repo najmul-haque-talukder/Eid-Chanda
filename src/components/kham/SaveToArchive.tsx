@@ -31,7 +31,7 @@ export function SaveToArchive({ khamId }: Props) {
   if (saved) {
     return (
       <Link
-        href="/dashboard/archive"
+        href="/archive"
         className="inline-block rounded-xl bg-primary px-6 py-3 text-white font-medium hover:bg-primary-dark"
       >
         Saved! View in Archive →
@@ -41,7 +41,7 @@ export function SaveToArchive({ khamId }: Props) {
   if (!user) {
     return (
       <Link
-        href={`/login?next=/dashboard/archive`}
+        href={`/login?next=/archive`}
         className="inline-block rounded-xl bg-primary px-6 py-3 text-white font-medium hover:bg-primary-dark"
       >
         Sign in to save in your Eid Archive

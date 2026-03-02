@@ -110,12 +110,15 @@ export function SendKhamForm({ senderId, senderProfile }: { senderId: string, se
     });
 
     if (error) {
-      showToast("Operation failed! Please try again.", "error");
+      console.error("Supabase Error:", error);
+      showToast("Operation failed: " + (error.message || "Unknown error"), "error");
       setSending(false);
       return;
     }
 
-    router.push("/dashboard/sent?created=" + slug);
+    showToast("Request Card Sent successfully! 💌", "success");
+    router.push("/sent?created=" + slug);
+    router.refresh(); // Crucial for showing it on the Sent page immediately
   }
 
   if (selectedUser) {

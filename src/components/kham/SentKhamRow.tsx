@@ -14,6 +14,11 @@ type Kham = {
   delivered_at: string | null;
   reaction: string | null;
   letter_text: string | null;
+  receiver?: {
+    username: string;
+    full_name: string | null;
+    avatar_url: string | null;
+  } | null;
 };
 
 type Props = { kham: Kham; baseUrl: string };
@@ -24,7 +29,6 @@ export function SentKhamRow({ kham, baseUrl }: Props) {
   const [link, setLink] = useState("");
 
   useEffect(() => {
-    // Dynamically detect the correct base URL
     const currentOrigin = window.location.origin;
     const finalBase = (baseUrl && baseUrl !== "https://digitalkham.vercel.app")
       ? baseUrl
@@ -39,74 +43,90 @@ export function SentKhamRow({ kham, baseUrl }: Props) {
   }
 
   return (
-    <div className="rounded-xl bg-white border border-cream-dark p-4 flex flex-wrap items-center justify-between gap-2">
-      <div>
-        <p className="font-bold text-gray-900 flex items-center gap-2">
-          To: {kham.receiver_name}
-        </p>
-        <div className="flex items-center gap-3 mt-1">
-          <p className="text-sm font-bold text-primary bg-primary/5 px-2 py-0.5 rounded-lg border border-primary/10">
-            {kham.amount}
-          </p>
-          <p className="text-[11px] text-gray-400 flex items-center gap-1">
-            <i className="fa-solid fa-clock"></i>
-            {new Date(kham.created_at).toLocaleDateString()} at {new Date(kham.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-          </p>
+    <div className="group bg-white border border-gray-100 rounded-3xl p-5 transition-all hover:border-[#064e3b]/20 hover:shadow-xl hover:shadow-[#064e3b]/5">
+      <div className="flex items-center justify-between gap-4">
+        {/* Receiver Info */}
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center overflow-hidden shrink-0 group-hover:scale-105 transition-transform">
+            {kham.receiver?.avatar_url ? (
+              <img src={kham.receiver.avatar_url} className="w-full h-full object-cover" alt="receiver" />
+            ) : (
+              <span className="text-[#064e3b] font-black text-lg">
+                {(kham.receiver?.full_name || kham.receiver_name || "U")[0].toUpperCase()}
+              </span>
+            )}
+          </div>
+          <div>
+            <h4 className="font-bold text-gray-900 leading-tight">
+              {kham.receiver?.full_name || kham.receiver_name}
+              {kham.receiver?.username && (
+                <span className="block text-[10px] text-gray-400 font-medium">@{kham.receiver.username}</span>
+              )}
+            </h4>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-[10px] font-black text-[#064e3b] bg-[#064e3b]/5 px-2 py-0.5 rounded-full border border-[#064e3b]/10">
+                ৳{kham.amount}
+              </span>
+              <span className="text-[10px] font-medium text-gray-300">
+                {new Date(kham.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+              </span>
+            </div>
+          </div>
         </div>
 
-        {kham.letter_text && (
-          <div className="mt-3 p-3 bg-cream rounded-xl border border-cream-dark text-sm text-gray-700 font-bangla relative">
-            <i className="fa-solid fa-quote-left text-primary/20 absolute top-2 left-2 text-xs"></i>
-            <p className="px-4 leading-relaxed font-bangla">"{kham.letter_text}"</p>
+        {/* Action Buttons */}
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => setShowQR(!showQR)}
+            className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${showQR ? 'bg-[#064e3b] text-white' : 'text-gray-400 hover:text-[#064e3b] hover:bg-gray-50'}`}
+            title="QR Code"
+          >
+            <i className="fa-solid fa-qrcode text-sm"></i>
+          </button>
+          <button
+            onClick={copy}
+            className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${copied ? 'bg-green-500 text-white' : 'text-gray-400 hover:text-[#064e3b] hover:bg-gray-50'}`}
+            title="Copy Link"
+          >
+            <i className={`fa-solid ${copied ? "fa-check" : "fa-link-simple"} text-sm`}></i>
+          </button>
+        </div>
+      </div>
+
+      {/* Highlighted Message Preview */}
+      {kham.letter_text && (
+        <div className="mt-4 p-4 bg-gray-50/50 rounded-2xl border border-gray-100/50 italic">
+          <p className="text-sm md:text-base text-gray-600 font-bangla leading-relaxed italic">
+            "{kham.letter_text}"
+          </p>
+        </div>
+      )}
+
+      {/* Footer / Status */}
+      <div className="mt-4 flex items-center justify-between border-t border-gray-50 pt-3">
+        {kham.delivered_at ? (
+          <div className="flex items-center gap-1.5">
+            <div className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
+            <span className="text-[10px] font-black text-green-600 uppercase tracking-widest">Opened</span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-1.5">
+            <div className="w-1.5 h-1.5 rounded-full bg-gray-200" />
+            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Sent</span>
           </div>
         )}
 
-        {kham.reaction && (
-          <p className="mt-2 text-xs font-bold animate-pulse flex items-center gap-2 text-primary bg-primary/5 w-max px-2 py-1 rounded-full border border-primary/20">
-            Your Khām made someone {
-              kham.reaction === '❤️' ? <span>feel loved <i className="fa-solid fa-heart text-red-500"></i></span> :
-                kham.reaction === '🥹' ? <span>emotional <i className="fa-solid fa-face-grin-stars text-yellow-500"></i></span> :
-                  kham.reaction === '😂' ? <span>laugh <i className="fa-solid fa-face-laugh-squint text-orange-500"></i></span> :
-                    kham.reaction === '🤲' ? <span>make dua <i className="fa-solid fa-person-praying text-primary"></i></span> : 'react!'
-            }
-          </p>
-        )}
-
-        {!kham.delivered_at && kham.scheduled_at && new Date(kham.scheduled_at) <= new Date() && (
-          <p className="mt-2 text-[11px] font-bold text-gray-400 flex items-center gap-1.5 px-2 py-1 bg-gray-50 rounded-full border border-gray-200 w-max">
-            <i className="fa-solid fa-envelope"></i> Waiting silently... <i className="fa-solid fa-face-smile-wink text-primary"></i>
-          </p>
-        )}
-        {kham.delivered_at && !kham.reaction && (
-          <p className="mt-2 text-[11px] font-bold text-green-600 flex items-center gap-1.5 px-2 py-1 bg-green-50 rounded-full border border-green-200 w-max">
-            <i className="fa-solid fa-circle-check"></i> Opened • {new Date(kham.delivered_at).toLocaleDateString()}
-          </p>
-        )}
-      </div>
-      <div className="flex items-center gap-2">
-        <button
-          type="button"
-          onClick={() => setShowQR(!showQR)}
-          className="rounded-lg bg-gray-100 text-gray-700 px-3 py-1.5 text-sm hover:bg-gray-200"
-        >
-          {showQR ? "Hide QR" : "QR Code"}
-        </button>
-        <button
-          type="button"
-          onClick={copy}
-          className="rounded-lg bg-primary/10 text-primary px-3 py-1.5 text-sm hover:bg-primary/20"
-        >
-          {copied ? "Copied!" : "Copy link"}
-        </button>
-        <Link href={`/k/${kham.slug}`} className="text-sm text-primary underline font-bold">Open</Link>
+        <div className="text-[9px] font-black text-gray-200 uppercase tracking-widest">
+          Khām
+        </div>
       </div>
 
       {showQR && (
-        <div className="w-full mt-4 p-4 border-t border-cream-dark flex flex-col items-center justify-center bg-gray-50 rounded-b-xl">
-          <p className="text-sm text-gray-600 mb-4 text-center">Scan to open. Print this and attach to a physical envelope! <i className="fa-solid fa-envelope-heart text-primary"></i></p>
-          <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-            <QRCode value={link} size={150} />
+        <div className="mt-4 pt-4 border-t border-gray-50 flex flex-col items-center animate-in slide-in-from-top-2 duration-300">
+          <div className="bg-white p-3 rounded-2xl border border-gray-100 shadow-xl shadow-[#064e3b]/5">
+            <QRCode value={link} size={100} fgColor="#064e3b" />
           </div>
+          <p className="text-[9px] font-bold text-gray-300 mt-3 uppercase tracking-widest">Scan to Preview</p>
         </div>
       )}
     </div>

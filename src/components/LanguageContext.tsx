@@ -22,6 +22,7 @@ const translations: Record<Lang, Record<string, string>> = {
         "dashboard.logout": "Logout",
         "dashboard.toggleLang": "বাংলা",
         "dashboard.about": "About",
+        "dashboard.publicDua": "Public Dua",
     },
     bn: {
         "dashboard.profile": "আমার প্রোফাইল",
@@ -34,6 +35,7 @@ const translations: Record<Lang, Record<string, string>> = {
         "dashboard.logout": "লগআউট",
         "dashboard.toggleLang": "English",
         "dashboard.about": "সম্পর্কে",
+        "dashboard.publicDua": "দোয়া ওয়াল",
     }
 };
 
