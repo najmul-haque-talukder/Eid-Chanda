@@ -228,15 +228,20 @@ export function DashboardSidebar({ user }: { user: User | null }) {
           ))}
         </nav>
 
-        <div className="mt-auto px-4 w-full pt-4 border-t border-cream-dark">
+        <div className="mt-auto px-4 w-full py-4 border-t border-cream-dark bg-white">
           {user && (
             <button
               type="button"
               onClick={signOut}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-red-500 hover:bg-red-50 hover:text-red-700 transition font-bangla"
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-red-500 hover:bg-red-50 hover:text-red-700 transition-all duration-300 font-bangla group"
             >
-              <LogOut size={18} />
-              <span>{t["dashboard.logout"]}</span>
+              <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center group-hover:bg-red-100 transition-colors">
+                <LogOut size={18} />
+              </div>
+              <span className="flex-1 text-left">{t["dashboard.logout"]}</span>
+              <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="w-1.5 h-1.5 rounded-full bg-red-400"></div>
+              </div>
             </button>
           )}
         </div>
