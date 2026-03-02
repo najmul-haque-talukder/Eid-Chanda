@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { MessageChat } from "@/components/messages/MessageChat";
 import Link from "next/link";
+import NextImage from "next/image";
 
 export default async function MessagesPage({ searchParams }: { searchParams: Promise<{ to?: string }> }) {
     const supabase = await createClient();
@@ -48,6 +49,10 @@ export default async function MessagesPage({ searchParams }: { searchParams: Pro
         }
     }
 
+    let currentUserProfile = null;
+    const { data: profile } = await supabase.from("profiles").select("avatar_url").eq("id", user.id).single();
+    currentUserProfile = profile;
+
     return (
         <div className="max-w-2xl">
             <h1 className="text-2xl font-bold text-gray-900">Messages</h1>
@@ -68,7 +73,14 @@ export default async function MessagesPage({ searchParams }: { searchParams: Pro
                                         <div className="flex items-center gap-4">
                                             <div className="w-10 h-10 rounded-full bg-cream-dark flex items-center justify-center overflow-hidden shrink-0 border border-primary/20">
                                                 {f.avatar_url ? (
-                                                    <img src={f.avatar_url} alt={f.username} className="w-full h-full object-cover" />
+                                                    <NextImage
+                                                        src={f.avatar_url}
+                                                        alt={f.username}
+                                                        className="w-full h-full object-cover"
+                                                        width={40}
+                                                        height={40}
+                                                        unoptimized
+                                                    />
                                                 ) : (
                                                     <span className="text-primary font-bold">{f.full_name?.charAt(0) || f.username.charAt(0)}</span>
                                                 )}
@@ -99,6 +111,7 @@ export default async function MessagesPage({ searchParams }: { searchParams: Pro
                         toUserId={toId}
                         initialToUsername={toUser?.username || "Friend"}
                         initialToAvatar={toUser?.avatar_url || null}
+                        currentUserAvatar={currentUserProfile?.avatar_url || null}
                     />
                 </div>
             )}

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import { CheckCircle2, AlertCircle, Info, X } from "lucide-react";
 
 interface ToastProps {
     message: string;
@@ -16,9 +16,9 @@ export function Toast({ message, type, onClose }: ToastProps) {
     }[type];
 
     const icon = {
-        success: <i className="fa-solid fa-circle-check"></i>,
-        error: <i className="fa-solid fa-circle-exclamation"></i>,
-        info: <i className="fa-solid fa-circle-info"></i>,
+        success: <CheckCircle2 size={20} />,
+        error: <AlertCircle size={20} />,
+        info: <Info size={20} />,
     }[type];
 
     return (
@@ -30,7 +30,7 @@ export function Toast({ message, type, onClose }: ToastProps) {
                     onClick={onClose}
                     className="hover:rotate-90 transition-transform p-1"
                 >
-                    <i className="fa-solid fa-xmark"></i>
+                    <X size={20} />
                 </button>
             </div>
         </div>

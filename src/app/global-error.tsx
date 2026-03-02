@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { AlertTriangle } from "lucide-react";
 
 export default function GlobalError({
     error,
@@ -18,7 +19,7 @@ export default function GlobalError({
         <html>
             <body className="font-sans min-h-screen bg-cream flex flex-col items-center justify-center p-6 text-center">
                 <div className="w-24 h-24 bg-red-100 text-red-500 rounded-full flex items-center justify-center text-4xl mb-6 shadow-xl animate-bounce">
-                    <i className="fa-solid fa-triangle-exclamation"></i>
+                    <AlertTriangle size={48} />
                 </div>
                 <h1 className="text-3xl font-bold font-bangla text-gray-900 mb-4">ক্ষমা করবেন! একটি সমস্যা দেখা দিয়েছে।</h1>
                 <p className="text-gray-500 max-w-md mb-8 leading-relaxed">

@@ -4,20 +4,47 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ToastContext";
 import { useState, useEffect, useRef } from "react";
+import NextImage from "next/image";
+import {
+  Send,
+  Search,
+  ArrowLeft,
+  ArrowRight,
+  User
+} from "lucide-react";
 
-export function SendKhamForm({ senderId, senderProfile }: { senderId: string, senderProfile: any }) {
+type Profile = {
+  id: string;
+  username: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  bkash_number?: string | null;
+  nagad_number?: string | null;
+  rocket_number?: string | null;
+  upay_number?: string | null;
+  dbbl_number?: string | null;
+};
+
+type UserSearchResult = {
+  id: string;
+  username: string;
+  full_name: string | null;
+  avatar_url: string | null;
+};
+
+export function SendKhamForm({ senderId, senderProfile }: { senderId: string, senderProfile: Profile | null }) {
   const router = useRouter();
   const { showToast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [allUsers, setAllUsers] = useState<any[]>([]);
+  const [searchResults, setSearchResults] = useState<UserSearchResult[]>([]);
+  const [allUsers, setAllUsers] = useState<UserSearchResult[]>([]);
   const [page, setPage] = useState(0);
   const [loadingUsers, setLoadingUsers] = useState(false);
-  const searchTimeoutRef = useRef<any>(null);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const USERS_PER_PAGE = 5;
 
   // Form state
-  const [selectedUser, setSelectedUser] = useState<any | null>(null);
+  const [selectedUser, setSelectedUser] = useState<UserSearchResult | null>(null);
   const [message, setMessage] = useState("Eid Mubarak! Salami din bkash e...");
   const [platform, setPlatform] = useState("bKash");
   const [number, setNumber] = useState(senderProfile?.bkash_number || senderProfile?.nagad_number || senderProfile?.rocket_number || senderProfile?.upay_number || senderProfile?.dbbl_number || "");
@@ -130,7 +157,14 @@ export function SendKhamForm({ senderId, senderProfile }: { senderId: string, se
         </div>
 
         <div className="mb-6 flex gap-4 p-4 bg-gray-50 rounded-xl items-center border border-gray-100">
-          <img src={selectedUser.avatar_url || "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png"} className="w-12 h-12 rounded-full object-cover" />
+          <NextImage
+            src={selectedUser.avatar_url || "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png"}
+            className="w-12 h-12 rounded-full object-cover"
+            alt="avatar"
+            width={48}
+            height={48}
+            unoptimized
+          />
           <div>
             <p className="font-bold text-gray-900">{selectedUser.full_name || "No name"}</p>
             <p className="text-sm text-gray-500">@{selectedUser.username}</p>
@@ -183,7 +217,14 @@ export function SendKhamForm({ senderId, senderProfile }: { senderId: string, se
             <p className="text-xs text-gray-500 text-center mb-4 uppercase tracking-widest">Card Preview</p>
             <div className="bg-white p-6 rounded-xl shadow-lg text-center space-y-3 relative overflow-hidden">
               {!anonymous && senderProfile?.avatar_url && (
-                <img src={senderProfile.avatar_url} className="w-16 h-16 rounded-full mx-auto border-2 border-primary" />
+                <NextImage
+                  src={senderProfile.avatar_url}
+                  className="w-16 h-16 rounded-full mx-auto border-2 border-primary"
+                  alt="sender"
+                  width={64}
+                  height={64}
+                  unoptimized
+                />
               )}
               <p className="font-bangla font-medium text-lg leading-relaxed text-gray-800">"{message}"</p>
               {!anonymous && (
@@ -204,7 +245,7 @@ export function SendKhamForm({ senderId, senderProfile }: { senderId: string, se
             {sending ? "Sending..." : (
               <>
                 <span>Send Request Card</span>
-                <i className="fa-solid fa-paper-plane text-sm"></i>
+                <Send size={16} />
               </>
             )}
           </button>
@@ -216,7 +257,7 @@ export function SendKhamForm({ senderId, senderProfile }: { senderId: string, se
   return (
     <div className="bg-white p-6 rounded-2xl shadow-sm border border-cream-dark">
       <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-        Search user to send a request <i className="fa-solid fa-magnifying-glass text-primary text-sm"></i>
+        Search user to send a request <Search className="text-primary" size={18} />
       </h2>
       <input
         type="text"
@@ -242,7 +283,14 @@ export function SendKhamForm({ senderId, senderProfile }: { senderId: string, se
               >
                 <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                   <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-cream shrink-0 overflow-hidden">
-                    <img src={user.avatar_url || "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png"} className="w-full h-full object-cover" loading="lazy" />
+                    <NextImage
+                      src={user.avatar_url || "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png"}
+                      className="w-full h-full object-cover"
+                      alt="avatar"
+                      width={40}
+                      height={40}
+                      unoptimized
+                    />
                   </div>
                   <div className="min-w-0">
                     <p className="font-bold text-gray-900 text-sm sm:text-base truncate">{user.full_name || "No name"}</p>
@@ -274,7 +322,14 @@ export function SendKhamForm({ senderId, senderProfile }: { senderId: string, se
                 >
                   <div className="flex items-center gap-3 sm:gap-4 min-w-0">
                     <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-cream shrink-0 overflow-hidden border-2 border-primary/5">
-                      <img src={user.avatar_url || "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png"} className="w-full h-full object-cover" loading="lazy" />
+                      <NextImage
+                        src={user.avatar_url || "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png"}
+                        className="w-full h-full object-cover"
+                        alt="avatar"
+                        width={48}
+                        height={48}
+                        unoptimized
+                      />
                     </div>
                     <div className="min-w-0">
                       <p className="font-bold text-gray-900 text-sm sm:text-base truncate">{user.full_name || "No name"}</p>
@@ -294,17 +349,17 @@ export function SendKhamForm({ senderId, senderProfile }: { senderId: string, se
               <button
                 onClick={() => fetchPage(Math.max(0, page - 1))}
                 disabled={page === 0}
-                className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-bold text-gray-600 disabled:opacity-30 hover:bg-gray-50"
+                className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-bold text-gray-600 disabled:opacity-30 hover:bg-gray-50 flex items-center"
               >
-                <i className="fa-solid fa-arrow-left mr-2"></i> Previous
+                <ArrowLeft size={16} className="mr-2" /> Previous
               </button>
               <div className="text-sm font-bold text-gray-400">Page {page + 1}</div>
               <button
                 onClick={() => fetchPage(page + 1)}
                 disabled={allUsers.length < USERS_PER_PAGE}
-                className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-bold text-gray-600 disabled:opacity-30 hover:bg-gray-50"
+                className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-bold text-gray-600 disabled:opacity-30 hover:bg-gray-50 flex items-center"
               >
-                Next <i className="fa-solid fa-arrow-right ml-2"></i>
+                Next <ArrowRight size={16} className="ml-2" />
               </button>
             </div>
           )}

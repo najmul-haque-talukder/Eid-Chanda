@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { SentKhamRow } from "@/components/kham/SentKhamRow";
+import { CheckCircle2, PackageOpen } from "lucide-react";
 
 type Props = { searchParams: Promise<{ created?: string }> };
 
@@ -15,7 +16,7 @@ export default async function SentPage({ searchParams }: Props) {
 
   const { data: khams } = await supabase
     .from("khams")
-    .select("id, slug, receiver_name, receiver_id, amount, created_at, scheduled_at, delivered_at, letter_text, receiver:profiles!receiver_id(username, full_name, avatar_url)")
+    .select("id, slug, receiver_name, receiver_id, amount, created_at, scheduled_at, delivered_at, reaction, letter_text, receiver:profiles!receiver_id(username, full_name, avatar_url)")
     .eq("sender_id", user.id)
     .order("created_at", { ascending: false });
 
@@ -33,7 +34,7 @@ export default async function SentPage({ searchParams }: Props) {
       {createdSlug && (
         <div className="mt-6 p-6 rounded-[2rem] bg-primary/10 border-2 border-primary/20 shadow-xl shadow-primary/5 animate-bounce-short">
           <p className="font-black text-primary flex items-center gap-2">
-            <i className="fa-solid fa-circle-check"></i> Khām created successfully!
+            <CheckCircle2 size={18} /> Khām created successfully!
           </p>
           <div className="mt-3 flex items-center gap-2 bg-white/60 p-3 rounded-xl border border-primary/10">
             <p className="text-sm font-bold text-gray-700 break-all select-all">{baseUrl}/k/{createdSlug}</p>
@@ -46,7 +47,7 @@ export default async function SentPage({ searchParams }: Props) {
         {!khams?.length && (
           <div className="bg-white p-12 rounded-[2.5rem] border-2 border-cream-dark shadow-xl text-center space-y-4">
             <div className="w-16 h-16 bg-cream rounded-full mx-auto flex items-center justify-center text-primary/30 text-2xl">
-              <i className="fa-solid fa-box-open"></i>
+              <PackageOpen size={32} />
             </div>
             <p className="text-gray-500 font-bangla text-lg italic">আপনি এখনো কোনো খাম পাঠাননি।</p>
             <Link href="/send" className="inline-block bg-primary text-white font-black px-8 py-3 rounded-2xl shadow-lg shadow-primary/20 hover:scale-105 transition-transform">
@@ -54,9 +55,13 @@ export default async function SentPage({ searchParams }: Props) {
             </Link>
           </div>
         )}
-        {khams?.filter(k => k.slug).map((k) => (
-          <SentKhamRow key={k.id} kham={k} baseUrl={baseUrl} />
-        ))}
+        {khams?.filter(k => k.slug).map((k: any) => {
+          const khamData = {
+            ...k,
+            receiver: Array.isArray(k.receiver) ? k.receiver[0] : k.receiver
+          };
+          return <SentKhamRow key={k.id} kham={khamData} baseUrl={baseUrl} />;
+        })}
       </div>
     </div>
   );

@@ -1,6 +1,12 @@
 "use client";
 
 import { useLanguage } from "@/components/LanguageContext";
+import {
+    Contact,
+    MailOpen,
+    Clock,
+    Archive
+} from "lucide-react";
 
 export default function AboutPage() {
     const { lang } = useLanguage();
@@ -43,26 +49,26 @@ export default function AboutPage() {
                                 {
                                     bn: "সালামি রিকোয়েস্ট কার্ড",
                                     en: "Salami Request Card",
-                                    icon: "fa-address-card"
+                                    icon: <Contact className="text-primary" />
                                 },
                                 {
                                     bn: "ডিজিটাল খাম (এনিমেটেড)",
                                     en: "Digital Khām (Animated)",
-                                    icon: "fa-envelope-open-text"
+                                    icon: <MailOpen className="text-primary" />
                                 },
                                 {
                                     bn: "সালামি শিডিউলিং",
                                     en: "Salami Scheduling",
-                                    icon: "fa-clock"
+                                    icon: <Clock className="text-primary" />
                                 },
                                 {
                                     bn: "ঈদ আর্কাইভ (স্মৃতি)",
                                     en: "Eid Archive (Memories)",
-                                    icon: "fa-box-archive"
+                                    icon: <Archive className="text-primary" />
                                 },
                             ].map((item, idx) => (
                                 <li key={idx} className="flex items-center gap-3 bg-cream/30 p-3 rounded-xl border border-cream-dark/50">
-                                    <i className={`fa-solid ${item.icon} text-primary`}></i>
+                                    {item.icon}
                                     <span className="font-medium">{lang === "bn" ? item.bn : item.en}</span>
                                 </li>
                             ))}

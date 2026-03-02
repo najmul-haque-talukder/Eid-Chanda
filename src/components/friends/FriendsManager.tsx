@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
+import NextImage from "next/image";
 import { useToast } from "@/components/ToastContext";
 
 export function FriendsManager({ currentUserId }: { currentUserId: string }) {
@@ -191,7 +192,14 @@ export function FriendsManager({ currentUserId }: { currentUserId: string }) {
                                 <div className="flex items-center gap-3">
                                     <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center overflow-hidden shrink-0">
                                         {user.avatar_url ? (
-                                            <img src={user.avatar_url} alt={user.username} className="w-full h-full object-cover" />
+                                            <NextImage
+                                                src={user.avatar_url}
+                                                alt={user.username}
+                                                className="w-full h-full object-cover"
+                                                width={40}
+                                                height={40}
+                                                unoptimized
+                                            />
                                         ) : (
                                             <span className="text-orange-600 font-bold">{user.full_name?.charAt(0) || user.username.charAt(0)}</span>
                                         )}
@@ -223,7 +231,14 @@ export function FriendsManager({ currentUserId }: { currentUserId: string }) {
                                 <div className="flex items-center gap-3 min-w-[140px]">
                                     <div className="w-10 h-10 rounded-full bg-cream-dark flex items-center justify-center overflow-hidden shrink-0 border border-primary/20">
                                         {user.avatar_url ? (
-                                            <img src={user.avatar_url} alt={user.username} className="w-full h-full object-cover" />
+                                            <NextImage
+                                                src={user.avatar_url}
+                                                alt={user.username}
+                                                className="w-full h-full object-cover"
+                                                width={40}
+                                                height={40}
+                                                unoptimized
+                                            />
                                         ) : (
                                             <span className="text-primary font-bold">{user.full_name?.charAt(0) || user.username.charAt(0)}</span>
                                         )}

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
+import NextImage from "next/image";
 
 export function MyDuaWallManager({ currentUserId }: { currentUserId: string }) {
     const [duas, setDuas] = useState<any[]>([]);
@@ -156,7 +157,14 @@ export function MyDuaWallManager({ currentUserId }: { currentUserId: string }) {
                                     <div className="flex items-center gap-3 mb-4">
                                         <div className="w-10 h-10 rounded-full bg-cream border border-primary/10 flex items-center justify-center overflow-hidden shrink-0">
                                             {dua.profiles?.avatar_url ? (
-                                                <img src={dua.profiles.avatar_url} alt="" className="w-full h-full object-cover" />
+                                                <NextImage
+                                                    src={dua.profiles.avatar_url}
+                                                    alt=""
+                                                    className="w-full h-full object-cover"
+                                                    width={40}
+                                                    height={40}
+                                                    unoptimized
+                                                />
                                             ) : (
                                                 <span className="text-primary font-bold">{dua.profiles?.username?.[0]?.toUpperCase() || "?"}</span>
                                             )}

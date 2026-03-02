@@ -2,6 +2,7 @@
 
 import { useLanguage } from "@/components/LanguageContext";
 import Link from "next/link";
+import { BookOpen, UserPlus, LogOut } from "lucide-react";
 
 export function DashboardRightSidebar() {
     const { t, lang } = useLanguage();
@@ -33,7 +34,7 @@ export function DashboardRightSidebar() {
                 <div className="space-y-2">
                     <Link href="/dua-wall" className="flex items-center gap-3 p-3 rounded-xl hover:bg-cream transition group">
                         <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center group-hover:bg-blue-100 transition">
-                            <i className="fa-solid fa-book-quran text-lg"></i>
+                            <BookOpen size={20} />
                         </div>
                         <div>
                             <p className="text-sm font-bold text-gray-800">{lang === 'bn' ? 'দোয়া লিখুন' : 'Write a Dua'}</p>
@@ -43,7 +44,7 @@ export function DashboardRightSidebar() {
 
                     <Link href="/friends" className="flex items-center gap-3 p-3 rounded-xl hover:bg-cream transition group">
                         <div className="w-10 h-10 rounded-full bg-orange-50 text-orange-500 flex items-center justify-center group-hover:bg-orange-100 transition">
-                            <i className="fa-solid fa-user-plus"></i>
+                            <UserPlus size={20} />
                         </div>
                         <div>
                             <p className="text-sm font-bold text-gray-800">{lang === 'bn' ? 'নতুন বন্ধু খুঁজুন' : 'Find Friends'}</p>
@@ -55,13 +56,26 @@ export function DashboardRightSidebar() {
 
             {/* Footer / Info */}
             <div className="mt-auto pt-4 border-t border-cream-dark">
-                <div className="text-xs text-gray-400 font-medium">
-                    <p>© 2026 Eid Chanda</p>
-                    <p className="mt-1 flex gap-2">
-                        <a href="#" className="hover:text-primary transition">{lang === 'bn' ? 'গোপনীয়তা' : 'Privacy'}</a>
-                        <span>•</span>
-                        <a href="#" className="hover:text-primary transition">{lang === 'bn' ? 'শর্তাবলী' : 'Terms'}</a>
-                    </p>
+                <div className="flex items-center justify-between mb-4">
+                    <div className="text-xs text-gray-400 font-medium">
+                        <p>© 2026 Eid Chanda</p>
+                        <p className="mt-1 flex gap-2">
+                            <a href="#" className="hover:text-primary transition">{lang === 'bn' ? 'গোপনীয়তা' : 'Privacy'}</a>
+                            <span>•</span>
+                            <a href="#" className="hover:text-primary transition">{lang === 'bn' ? 'শর্তাবলী' : 'Terms'}</a>
+                        </p>
+                    </div>
+                    <button
+                        onClick={async () => {
+                            const { createClient } = await import("@/lib/supabase/client");
+                            await createClient().auth.signOut();
+                            window.location.href = "/";
+                        }}
+                        className="text-[10px] font-bold text-red-500 hover:text-red-700 transition flex items-center gap-1.5 p-1.5 hover:bg-red-50 rounded-lg"
+                    >
+                        <LogOut size={14} />
+                        {lang === 'bn' ? 'লগআউট' : 'Logout'}
+                    </button>
                 </div>
             </div>
 

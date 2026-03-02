@@ -6,20 +6,33 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useLanguage } from "@/components/LanguageContext";
 import type { User } from "@supabase/supabase-js";
+import {
+  User as UserIcon,
+  Send,
+  PackageOpen,
+  Inbox,
+  Users,
+  MessageSquareDiff,
+  BookOpen,
+  Info,
+  Languages,
+  LogOut,
+  Bell
+} from "lucide-react";
 
 const mainNav = [
-  { href: "/", labelKey: "dashboard.profile", icon: <i className="fa-solid fa-user fa-fw"></i> },
-  { href: "/send", labelKey: "dashboard.send", icon: <i className="fa-solid fa-paper-plane fa-fw"></i> },
-  { href: "/sent", labelKey: "dashboard.sent", icon: <i className="fa-solid fa-box-open fa-fw"></i> },
-  { href: "/received", labelKey: "dashboard.received", icon: <i className="fa-solid fa-inbox fa-fw"></i> },
-  { href: "/friends", labelKey: "dashboard.friends", icon: <i className="fa-solid fa-users fa-fw"></i> },
-  { href: "/messages", labelKey: "dashboard.messages", icon: <i className="fa-solid fa-comment-dots fa-fw"></i> },
-  { href: "/public-dua", labelKey: "dashboard.publicDua", icon: <i className="fa-solid fa-book-quran fa-fw"></i> },
+  { href: "/", labelKey: "dashboard.profile", icon: <UserIcon size={18} /> },
+  { href: "/send", labelKey: "dashboard.send", icon: <Send size={18} /> },
+  { href: "/sent", labelKey: "dashboard.sent", icon: <PackageOpen size={18} /> },
+  { href: "/received", labelKey: "dashboard.received", icon: <Inbox size={18} /> },
+  { href: "/friends", labelKey: "dashboard.friends", icon: <Users size={18} /> },
+  { href: "/messages", labelKey: "dashboard.messages", icon: <MessageSquareDiff size={18} /> },
+  { href: "/public-dua", labelKey: "dashboard.publicDua", icon: <BookOpen size={18} /> },
 ];
 
 const auxNav = [
-  { href: "/dua-wall", labelKey: "dashboard.duawall", icon: <i className="fa-solid fa-book-quran fa-fw"></i> },
-  { href: "/about", labelKey: "dashboard.about", icon: <i className="fa-solid fa-info-circle fa-fw"></i> },
+  { href: "/dua-wall", labelKey: "dashboard.duawall", icon: <BookOpen size={18} /> },
+  { href: "/about", labelKey: "dashboard.about", icon: <Info size={18} /> },
 ];
 
 const allNav = [...mainNav, ...auxNav];
@@ -137,10 +150,22 @@ export function DashboardSidebar({ user }: { user: User | null }) {
           <Link href="/" className="flex items-center gap-2">
             <p className="font-bold text-primary text-2xl font-bangla tracking-tight select-none">ঈদ চান্দা</p>
           </Link>
-          <button onClick={() => setLang(lang === 'bn' ? 'en' : 'bn')} className="text-[10px] font-bold bg-cream px-3 py-1.5 rounded-full border border-cream-dark text-primary flex items-center gap-1.5 shadow-sm">
-            <i className="fa-solid fa-language text-xs opacity-60"></i>
-            {lang === 'bn' ? 'English' : 'বাংলা'}
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setLang(lang === 'bn' ? 'en' : 'bn')} className="text-[10px] font-bold bg-cream px-3 py-1.5 rounded-full border border-cream-dark text-primary flex items-center gap-1.5 shadow-sm">
+              <Languages size={14} className="opacity-60" />
+              {lang === 'bn' ? 'English' : 'বাংলা'}
+            </button>
+            {user && (
+              <button
+                onClick={signOut}
+                className="text-[10px] font-bold bg-red-50 px-3 py-1.5 rounded-full border border-red-100 text-red-500 flex items-center gap-1.5 shadow-sm"
+                title={t["dashboard.logout"]}
+              >
+                <LogOut size={14} className="opacity-60" />
+                <span>{t["dashboard.logout"]}</span>
+              </button>
+            )}
+          </div>
         </div>
         {/* Mobile Sub-Header Links for Dua Wall and About */}
         <div className="flex items-center justify-center gap-6 pb-3 px-4">
@@ -168,7 +193,7 @@ export function DashboardSidebar({ user }: { user: User | null }) {
             className="flex items-center gap-2 px-3 py-1.5 text-[10px] font-bold bg-cream rounded-lg border border-cream-dark text-primary hover:bg-primary hover:text-white transition shadow-sm group"
             title={t["dashboard.toggleLang"]}
           >
-            <i className="fa-solid fa-language text-xs opacity-60 group-hover:opacity-100"></i>
+            <Languages size={14} className="opacity-60 group-hover:opacity-100" />
             <span>{lang === 'bn' ? 'English' : 'বাংলা'}</span>
           </button>
         </div>
@@ -210,7 +235,7 @@ export function DashboardSidebar({ user }: { user: User | null }) {
               onClick={signOut}
               className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-red-500 hover:bg-red-50 hover:text-red-700 transition font-bangla"
             >
-              <i className="fa-solid fa-arrow-right-from-bracket text-lg"></i>
+              <LogOut size={18} />
               <span>{t["dashboard.logout"]}</span>
             </button>
           )}

@@ -2,11 +2,40 @@
 
 import { useState, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
-import Link from "next/link";
-import * as htmlToImage from "html-to-image";
+import Image from "next/image";
+import {
+    VenetianMask,
+    MailOpen,
+    Download,
+    X,
+    MoonStar,
+    Loader2
+} from "lucide-react";
+
+type Kham = {
+    id: string;
+    slug: string;
+    receiver_name: string;
+    amount: string;
+    letter_text: string | null;
+    anonymous: boolean;
+    delivered_at: string | null;
+    sender?: {
+        full_name: string | null;
+        username: string | null;
+        avatar_url: string | null;
+        bkash_number?: string | null;
+        nagad_number?: string | null;
+        rocket_number?: string | null;
+        upay_number?: string | null;
+        dbbl_number?: string | null;
+    } | null;
+    payment_method?: string | null;
+    payment_number?: string | null;
+};
 
 type Props = {
-    kham: any;
+    kham: Kham;
 };
 
 export function InteractiveKhamCard({ kham }: Props) {
@@ -28,6 +57,7 @@ export function InteractiveKhamCard({ kham }: Props) {
         if (!cardRef.current || isSaving) return;
         setIsSaving(true);
         try {
+            const htmlToImage = await import("html-to-image");
             const dataUrl = await htmlToImage.toJpeg(cardRef.current, {
                 quality: 1.0,
                 backgroundColor: "#ffffff",
@@ -59,10 +89,17 @@ export function InteractiveKhamCard({ kham }: Props) {
                         <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 border-2 border-[#E2136E]/20 bg-gray-50 flex items-center justify-center p-0.5 group-hover:scale-105 transition-transform">
                             {kham.anonymous ? (
                                 <div className="w-full h-full flex items-center justify-center text-xl text-[#E2136E]/30">
-                                    <i className="fa-solid fa-user-secret"></i>
+                                    <VenetianMask size={24} />
                                 </div>
                             ) : kham.sender?.avatar_url ? (
-                                <img src={kham.sender.avatar_url} className="w-full h-full object-cover rounded-full" alt="sender" />
+                                <Image
+                                    src={kham.sender.avatar_url}
+                                    className="w-full h-full object-cover rounded-full"
+                                    alt="sender"
+                                    width={48}
+                                    height={48}
+                                    unoptimized
+                                />
                             ) : (
                                 <div className="text-[#E2136E] font-black text-xl">
                                     {(kham.sender?.full_name || "A")[0].toUpperCase()}
@@ -78,7 +115,7 @@ export function InteractiveKhamCard({ kham }: Props) {
                         </div>
                     </div>
                     <div className="text-[#E2136E]/20 group-hover:text-[#E2136E]/60 transition-colors pr-2">
-                        <i className="fa-solid fa-envelope-open-text text-xl"></i>
+                        <MailOpen size={20} />
                     </div>
                 </div>
 
@@ -97,7 +134,7 @@ export function InteractiveKhamCard({ kham }: Props) {
                                 className="w-10 h-10 rounded-full bg-white/80 backdrop-blur-sm border border-[#E2136E]/10 flex items-center justify-center text-[#E2136E] hover:bg-[#E2136E] hover:text-white transition-all shadow-sm"
                                 title="Download as JPG"
                             >
-                                {isSaving ? <i className="fa-solid fa-circle-notch fa-spin text-sm"></i> : <i className="fa-solid fa-download text-sm"></i>}
+                                {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
                             </button>
 
                             {/* Close button */}
@@ -105,14 +142,14 @@ export function InteractiveKhamCard({ kham }: Props) {
                                 onClick={(e) => { e.stopPropagation(); setIsOpen(false); }}
                                 className="w-10 h-10 rounded-full bg-white/80 backdrop-blur-sm border border-[#E2136E]/10 flex items-center justify-center text-gray-400 hover:text-red-500 hover:border-red-100 transition-all shadow-sm"
                             >
-                                <i className="fa-solid fa-xmark text-lg"></i>
+                                <X size={20} />
                             </button>
                         </div>
 
                         <div className="flex-1 p-5 md:p-6 flex flex-col items-center justify-center text-center relative z-10">
                             {/* Moon Icon */}
                             <div className="mb-2">
-                                <i className="fa-solid fa-star-and-crescent text-[#E2136E] text-5xl opacity-90"></i>
+                                <MoonStar size={48} className="text-[#E2136E] opacity-90" />
                             </div>
 
                             <h3 className="text-2xl md:text-3xl font-black text-[#E2136E] font-bangla mb-1">ঈদ মোবারক!</h3>

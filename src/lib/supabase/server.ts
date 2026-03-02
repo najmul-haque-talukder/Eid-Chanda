@@ -26,13 +26,17 @@ export async function createClient() {
               cookieStore.set(name, value, options)
             );
           } catch (e) {
-            // Safe to ignore in middleware or server actions
+            // This will fail in Server Components, which is expected and fine
+            // as cookies can only be set in Middleware or Server Actions.
           }
         },
       },
     });
   } catch (e) {
     console.error("Failed to initialize Supabase server client:", e);
-    throw e;
+    // Return a basic client to avoid crashing everything
+    return createServerClient(supabaseUrl, supabaseAnonKey, {
+      cookies: { getAll() { return [] }, setAll() { } }
+    });
   }
 }

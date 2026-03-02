@@ -3,14 +3,46 @@
 import { useState, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import NextImage from "next/image";
+import {
+  UserPlus,
+  Lock,
+  Eye,
+  EyeOff,
+  Camera,
+  LogOut,
+  Edit3,
+  Smartphone,
+  Building2,
+  CheckCircle2,
+  Megaphone,
+  Facebook,
+  MessageCircle,
+  ExternalLink,
+  TriangleAlert
+} from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { useToast } from "@/components/ToastContext";
+
+type Profile = {
+  id: string;
+  username: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  card_quote: string | null;
+  bkash_number?: string | null;
+  nagad_number?: string | null;
+  rocket_number?: string | null;
+  upay_number?: string | null;
+  dbbl_number?: string | null;
+  email?: string | null;
+};
 
 export function ProfileManager({
   initialProfile,
   user,
 }: {
-  initialProfile: any;
+  initialProfile: Profile | null;
   user: User | null;
 }) {
   const router = useRouter();
@@ -95,10 +127,27 @@ export function ProfileManager({
     setSavedSuccess(false);
     const supabase = createClient();
 
+    const newUsername = username.toLowerCase().trim();
+
+    // Uniqueness Check if username changed
+    if (newUsername !== initialProfile?.username) {
+      const { data: existing } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("username", newUsername)
+        .maybeSingle();
+
+      if (existing) {
+        showToast("Username is already taken! ❌", "error");
+        setSaving(false);
+        return;
+      }
+    }
+
     const { error } = await supabase.from("profiles").upsert({
       id: user!.id,
       full_name: fullName,
-      username: username.toLowerCase().trim(),
+      username: newUsername,
       avatar_url: avatarUrl,
       card_quote: cardQuote,
       bkash_number: bkash,
@@ -111,7 +160,10 @@ export function ProfileManager({
 
     if (!error) {
       setSavedSuccess(true);
+      showToast("Profile Updated! 🎉", "success");
       router.refresh();
+    } else {
+      showToast("Update Failed: " + error.message, "error");
     }
     setSaving(false);
   }
@@ -181,9 +233,7 @@ export function ProfileManager({
       <div className="mt-8 bg-white p-8 rounded-[2.5rem] border-2 border-cream-dark shadow-2xl animate-in fade-in zoom-in duration-300">
         <div className="text-center mb-8">
           <div className="w-20 h-20 bg-primary/10 text-primary rounded-full flex items-center justify-center text-4xl mx-auto mb-4">
-            <i
-              className={`fa-solid ${isSignUp ? "fa-user-plus" : "fa-lock"}`}
-            ></i>
+            {isSignUp ? <UserPlus size={40} /> : <Lock size={40} />}
           </div>
           <h2 className="text-3xl font-black text-gray-900">
             {isSignUp ? "Create Card" : "Sign In"}
@@ -242,9 +292,7 @@ export function ProfileManager({
               onClick={() => setShowPassword(!showPassword)}
               className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-300 hover:text-primary"
             >
-              <i
-                className={`fa-solid ${showPassword ? "fa-eye-slash" : "fa-eye"}`}
-              ></i>
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
           </div>
           {error && (
@@ -285,9 +333,13 @@ export function ProfileManager({
             onClick={() => fileInputRef.current?.click()}
           >
             {avatarUrl ? (
-              <img
+              <NextImage
                 src={avatarUrl}
                 className="w-full h-full object-cover rounded-full"
+                alt="avatar"
+                width={128}
+                height={128}
+                unoptimized
               />
             ) : (
               <span className="text-3xl font-black text-primary">
@@ -295,7 +347,7 @@ export function ProfileManager({
               </span>
             )}
             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity rounded-full">
-              <i className="fa-solid fa-camera text-white text-xl"></i>
+              <Camera className="text-white" size={24} />
             </div>
             <input
               type="file"
@@ -319,7 +371,7 @@ export function ProfileManager({
           }}
           className="absolute top-6 right-6 text-gray-300 hover:text-red-500 transition-colors"
         >
-          <i className="fa-solid fa-sign-out text-xl"></i>
+          <LogOut size={24} />
         </button>
       </div>
 
@@ -330,7 +382,7 @@ export function ProfileManager({
       >
         <div className="border-b-2 border-cream pb-4 mb-4">
           <h3 className="text-xl font-black text-gray-900 flex items-center gap-2">
-            <i className="fa-solid fa-pen-to-square text-primary"></i> Edit Card
+            <Edit3 className="text-primary" size={20} /> Edit Card
             Details
           </h3>
         </div>
@@ -348,14 +400,18 @@ export function ProfileManager({
             />
           </div>
           <div className="space-y-1">
-            <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">
-              Username (URL)
+            <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1 flex items-center justify-between">
+              <span>Username (URL)</span>
+              <span className="text-[10px] text-amber-500 normal-case font-bold flex items-center gap-1">
+                <TriangleAlert size={12} /> Changes old links
+              </span>
             </label>
             <input
               type="text"
               value={username}
-              className="w-full px-5 py-3 rounded-2xl bg-cream/30 border-2 border-cream focus:border-primary outline-none font-bold opacity-50 cursor-not-allowed"
-              disabled
+              onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_.-]/g, ""))}
+              className="w-full px-5 py-3 rounded-2xl bg-cream/30 border-2 border-cream focus:border-primary outline-none font-bold"
+              placeholder="unique_username"
             />
           </div>
         </div>
@@ -376,7 +432,7 @@ export function ProfileManager({
           {/* bKash */}
           <div className="space-y-1">
             <label className="text-xs font-bold text-pink-600 flex items-center gap-1 uppercase ml-1">
-              <i className="fa-solid fa-mobile-screen"></i> bKash
+              <Smartphone size={14} /> bKash
             </label>
             <input
               type="text"
@@ -389,7 +445,7 @@ export function ProfileManager({
           {/* Nagad */}
           <div className="space-y-1">
             <label className="text-xs font-bold text-orange-600 flex items-center gap-1 uppercase ml-1">
-              <i className="fa-solid fa-mobile-screen"></i> Nagad
+              <Smartphone size={14} /> Nagad
             </label>
             <input
               type="text"
@@ -402,7 +458,7 @@ export function ProfileManager({
           {/* Rocket */}
           <div className="space-y-1">
             <label className="text-xs font-bold text-purple-600 flex items-center gap-1 uppercase ml-1">
-              <i className="fa-solid fa-mobile-screen"></i> Rocket
+              <Smartphone size={14} /> Rocket
             </label>
             <input
               type="text"
@@ -415,7 +471,7 @@ export function ProfileManager({
           {/* Upay */}
           <div className="space-y-1">
             <label className="text-xs font-bold text-blue-600 flex items-center gap-1 uppercase ml-1">
-              <i className="fa-solid fa-mobile-screen"></i> Upay
+              <Smartphone size={14} /> Upay
             </label>
             <input
               type="text"
@@ -428,7 +484,7 @@ export function ProfileManager({
           {/* DBBL */}
           <div className="space-y-1 lg:col-span-2">
             <label className="text-xs font-bold text-red-600 flex items-center gap-1 uppercase ml-1">
-              <i className="fa-solid fa-building-columns"></i> Dutch Bangla Bank
+              <Building2 size={14} /> Dutch Bangla Bank
               / Nexus
             </label>
             <input
@@ -450,7 +506,7 @@ export function ProfileManager({
             "SAVING..."
           ) : (
             <>
-              <i className="fa-solid fa-circle-check"></i> Save & Update My Card
+              <CheckCircle2 size={20} /> Save & Update My Card
             </>
           )}
         </button>
@@ -460,8 +516,8 @@ export function ProfileManager({
       {(savedSuccess || cardQuote) && (
         <div className="bg-primary/5 p-8 rounded-[2.5rem] border-2 border-primary/20 shadow-xl space-y-6">
           <div className="text-center">
-            <h3 className="text-2xl font-black text-primary">
-              <i className="fa-solid fa-bullhorn mr-2"></i> Card is Live!
+            <h3 className="text-2xl font-black text-primary flex items-center justify-center gap-2">
+              <Megaphone size={24} /> Card is Live!
             </h3>
             <p className="text-sm font-bold text-primary/60 mt-1">
               Share your link to receive Salami
@@ -485,22 +541,22 @@ export function ProfileManager({
               onClick={() => handleShare("fb")}
               className="bg-[#1877F2] text-white py-4 rounded-2xl font-black flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
             >
-              <i className="fa-brands fa-facebook-f"></i> FACEBOOK
+              <Facebook size={20} /> FACEBOOK
             </button>
             <button
               onClick={() => handleShare("wa")}
               className="bg-[#25D366] text-white py-4 rounded-2xl font-black flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
             >
-              <i className="fa-brands fa-whatsapp"></i> WHATSAPP
+              <MessageCircle size={20} /> WHATSAPP
             </button>
           </div>
 
           <a
             href={`/${username}`}
             target="_blank"
-            className="block text-center text-primary font-black hover:underline"
+            className="block text-center text-primary font-black hover:underline flex items-center justify-center gap-2"
           >
-            VIEW MY LIVE CARD <i className="fa-solid fa-eye ml-2"></i>
+            VIEW MY LIVE CARD <ExternalLink size={18} />
           </a>
         </div>
       )}

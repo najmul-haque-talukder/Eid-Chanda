@@ -2,6 +2,20 @@
 
 import { useRef, useState, useEffect } from "react";
 import * as htmlToImage from "html-to-image";
+import NextImage from "next/image";
+import {
+  Moon,
+  Star,
+  Quote,
+  Banknote,
+  Check,
+  Copy,
+  Building2,
+  Camera,
+  Loader2,
+  Facebook,
+  Link2
+} from "lucide-react";
 
 type ProfileProps = {
   id?: string;
@@ -79,9 +93,9 @@ export function RequestCardView({ profile }: { profile: ProfileProps }) {
       >
         <div className="h-28 bg-primary/5 flex items-center justify-center border-b-2 border-primary/10">
           <h2 className="text-primary font-black text-2xl font-bangla flex items-center gap-2">
-            <i className="fa-solid fa-moon text-primary/40 text-sm"></i>
+            <Moon className="text-primary/40" size={16} />
             {lang === 'bn' ? 'ঈদ মোবারক' : 'Eid Mubarak'}
-            <i className="fa-solid fa-star text-primary/40 text-sm"></i>
+            <Star className="text-primary/40" size={16} />
           </h2>
         </div>
 
@@ -89,11 +103,13 @@ export function RequestCardView({ profile }: { profile: ProfileProps }) {
           <div className="relative -mt-12 mb-4 flex justify-center">
             <div className="w-24 h-24 rounded-full border-4 border-white shadow-md overflow-hidden bg-cream flex items-center justify-center z-10">
               {profile.avatar_url ? (
-                <img
+                <NextImage
                   src={profile.avatar_url}
                   alt={profile.username}
                   className="w-full h-full object-cover rounded-full"
-                  crossOrigin="anonymous"
+                  width={96}
+                  height={96}
+                  unoptimized
                 />
               ) : (
                 <span className="text-primary text-3xl font-black">{(profile.full_name || profile.username)[0].toUpperCase()}</span>
@@ -107,23 +123,23 @@ export function RequestCardView({ profile }: { profile: ProfileProps }) {
 
           {/* QUOTE BLOCK WITH FONT AWESOME ICONS */}
           <div className="mb-6 p-5 rounded-2xl bg-cream/20 border border-cream text-gray-700 font-bangla text-base leading-relaxed relative italic">
-            <i className="fa-solid fa-quote-left text-primary/10 text-3xl absolute top-2 left-2"></i>
+            <Quote className="text-primary/10 absolute top-2 left-2 rotate-180" size={32} />
             <span className="relative z-10 px-4 inline-block">
               {profile.card_quote || (lang === 'bn' ? 'ঈদ মোবারক! সালামি পাঠাতে নিচের নম্বরগুলো ব্যবহার করুন।' : 'Eid Mubarak! Use the numbers below to send Salami.')}
             </span>
-            <i className="fa-solid fa-quote-right text-primary/10 text-3xl absolute bottom-2 right-2"></i>
+            <Quote className="text-primary/10 absolute bottom-2 right-2" size={32} />
           </div>
 
           <div className="space-y-3">
             {profile.bkash_number && (
               <button onClick={() => copyToClipboard(profile.bkash_number!, 'bkash')} className="w-full flex items-center justify-between bg-pink-50/50 border border-pink-100 p-3 rounded-xl hover:bg-pink-100 transition-all relative overflow-hidden group">
                 <div className="flex items-center gap-3">
-                  <i className="fa-solid fa-money-bill-transfer text-pink-600"></i>
+                  <Banknote className="text-pink-600" size={18} />
                   <span className="font-bold text-pink-700 text-sm">bKash</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="font-mono font-black text-pink-700">{profile.bkash_number}</span>
-                  <i className={`fa-solid ${copiedType === 'bkash' ? 'fa-check text-green-500' : 'fa-copy text-pink-300 opacity-0 group-hover:opacity-100'}`}></i>
+                  {copiedType === 'bkash' ? <Check className="text-green-500" size={16} /> : <Copy className="text-pink-300 opacity-0 group-hover:opacity-100" size={16} />}
                 </div>
                 {copiedType === 'bkash' && <span className="absolute inset-0 bg-white/90 flex items-center justify-center font-bold text-green-700 text-xs tracking-widest uppercase">Copied!</span>}
               </button>
@@ -132,12 +148,12 @@ export function RequestCardView({ profile }: { profile: ProfileProps }) {
             {profile.nagad_number && (
               <button onClick={() => copyToClipboard(profile.nagad_number!, 'nagad')} className="w-full flex items-center justify-between bg-orange-50/50 border border-orange-100 p-3 rounded-xl hover:bg-orange-100 transition-all relative overflow-hidden group">
                 <div className="flex items-center gap-3">
-                  <i className="fa-solid fa-money-bill-transfer text-orange-600"></i>
+                  <Banknote className="text-orange-600" size={18} />
                   <span className="font-bold text-orange-700 text-sm">Nagad</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="font-mono font-black text-orange-700">{profile.nagad_number}</span>
-                  <i className={`fa-solid ${copiedType === 'nagad' ? 'fa-check text-green-500' : 'fa-copy text-orange-300 opacity-0 group-hover:opacity-100'}`}></i>
+                  {copiedType === 'nagad' ? <Check className="text-green-500" size={16} /> : <Copy className="text-orange-300 opacity-0 group-hover:opacity-100" size={16} />}
                 </div>
                 {copiedType === 'nagad' && <span className="absolute inset-0 bg-white/90 flex items-center justify-center font-bold text-green-700 text-xs tracking-widest uppercase">Copied!</span>}
               </button>
@@ -146,12 +162,12 @@ export function RequestCardView({ profile }: { profile: ProfileProps }) {
             {profile.rocket_number && (
               <button onClick={() => copyToClipboard(profile.rocket_number!, 'rocket')} className="w-full flex items-center justify-between bg-purple-50/50 border border-purple-100 p-3 rounded-xl hover:bg-purple-100 transition-all relative overflow-hidden group">
                 <div className="flex items-center gap-3">
-                  <i className="fa-solid fa-money-bill-transfer text-purple-600"></i>
+                  <Banknote className="text-purple-600" size={18} />
                   <span className="font-bold text-purple-700 text-sm">Rocket</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="font-mono font-black text-purple-700">{profile.rocket_number}</span>
-                  <i className={`fa-solid ${copiedType === 'rocket' ? 'fa-check text-green-500' : 'fa-copy text-purple-300 opacity-0 group-hover:opacity-100'}`}></i>
+                  {copiedType === 'rocket' ? <Check className="text-green-500" size={16} /> : <Copy className="text-purple-300 opacity-0 group-hover:opacity-100" size={16} />}
                 </div>
                 {copiedType === 'rocket' && <span className="absolute inset-0 bg-white/90 flex items-center justify-center font-bold text-green-700 text-xs tracking-widest uppercase">Copied!</span>}
               </button>
@@ -160,12 +176,12 @@ export function RequestCardView({ profile }: { profile: ProfileProps }) {
             {profile.upay_number && (
               <button onClick={() => copyToClipboard(profile.upay_number!, 'upay')} className="w-full flex items-center justify-between bg-blue-50/50 border border-blue-100 p-3 rounded-xl hover:bg-blue-100 transition-all relative overflow-hidden group">
                 <div className="flex items-center gap-3">
-                  <i className="fa-solid fa-money-bill-transfer text-blue-600"></i>
+                  <Banknote className="text-blue-600" size={18} />
                   <span className="font-bold text-blue-700 text-sm">Upay</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="font-mono font-black text-blue-700">{profile.upay_number}</span>
-                  <i className={`fa-solid ${copiedType === 'upay' ? 'fa-check text-green-500' : 'fa-copy text-blue-300 opacity-0 group-hover:opacity-100'}`}></i>
+                  {copiedType === 'upay' ? <Check className="text-green-500" size={16} /> : <Copy className="text-blue-300 opacity-0 group-hover:opacity-100" size={16} />}
                 </div>
                 {copiedType === 'upay' && <span className="absolute inset-0 bg-white/90 flex items-center justify-center font-bold text-green-700 text-xs tracking-widest uppercase">Copied!</span>}
               </button>
@@ -174,12 +190,12 @@ export function RequestCardView({ profile }: { profile: ProfileProps }) {
             {profile.dbbl_number && (
               <button onClick={() => copyToClipboard(profile.dbbl_number!, 'dbbl')} className="w-full flex items-center justify-between bg-emerald-50/50 border border-emerald-100 p-3 rounded-xl hover:bg-emerald-100 transition-all relative overflow-hidden group">
                 <div className="flex items-center gap-3">
-                  <i className="fa-solid fa-building-columns text-emerald-600"></i>
+                  <Building2 className="text-emerald-600" size={18} />
                   <span className="font-bold text-emerald-700 text-sm">DBBL / Nexus</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="font-mono font-black text-emerald-700">{profile.dbbl_number}</span>
-                  <i className={`fa-solid ${copiedType === 'dbbl' ? 'fa-check text-green-500' : 'fa-copy text-emerald-300 opacity-0 group-hover:opacity-100'}`}></i>
+                  {copiedType === 'dbbl' ? <Check className="text-green-500" size={16} /> : <Copy className="text-emerald-300 opacity-0 group-hover:opacity-100" size={16} />}
                 </div>
                 {copiedType === 'dbbl' && <span className="absolute inset-0 bg-white/90 flex items-center justify-center font-bold text-green-700 text-xs tracking-widest uppercase">Copied!</span>}
               </button>
@@ -194,15 +210,15 @@ export function RequestCardView({ profile }: { profile: ProfileProps }) {
           disabled={isSaving}
           className="w-full rounded-2xl bg-gray-900 text-white px-4 py-4 font-black shadow-lg hover:shadow-black/20 hover:-translate-y-0.5 transition-all text-lg flex items-center justify-center gap-2 disabled:opacity-50"
         >
-          <i className={`fa-solid ${isSaving ? 'fa-circle-notch fa-spin' : 'fa-camera-retro'}`}></i>
+          {isSaving ? <Loader2 className="animate-spin" size={20} /> : <Camera size={20} />}
           {isSaving ? (lang === 'bn' ? 'প্রসেসিং...' : 'Processing...') : (lang === 'bn' ? 'কার্ডটি ডাউনলোড করুন' : 'Download Photo')}
         </button>
         <div className="flex gap-2">
           <button onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, "_blank")} className="flex-1 rounded-2xl bg-[#1877F2] text-white px-4 py-3 font-black hover:opacity-90 shadow-md transition-all flex items-center justify-center gap-2">
-            <i className="fa-brands fa-facebook-f"></i> FACEBOOK
+            <Facebook size={18} /> FACEBOOK
           </button>
           <button onClick={copyLink} className="flex-1 rounded-2xl bg-white border-2 border-gray-200 text-gray-700 px-4 py-3 font-black hover:bg-gray-50 transition-all flex items-center justify-center gap-2">
-            <i className={`fa-solid ${copiedLink ? 'fa-check text-green-500' : 'fa-link'}`}></i>
+            {copiedLink ? <Check className="text-green-500" size={18} /> : <Link2 size={18} />}
             {copiedLink ? (lang === 'bn' ? "সফল!" : "Copied!") : (lang === 'bn' ? "লিঙ্ক কপি" : "Copy Link")}
           </button>
         </div>

@@ -1,4 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
+import NextImage from "next/image";
+import { BookOpen } from "lucide-react";
 
 export default async function PublicDuaWallPage() {
     let duas = [];
@@ -19,7 +21,7 @@ export default async function PublicDuaWallPage() {
     return (
         <div className="space-y-6">
             <div className="bg-white p-8 rounded-[2.5rem] border-2 border-cream-dark shadow-xl text-center">
-                <i className="fa-solid fa-book-quran text-primary text-4xl mb-4"></i>
+                <BookOpen className="text-primary mx-auto mb-4" size={48} />
                 <h1 className="text-3xl font-black text-gray-900 font-bangla">দোয়া ওয়াল (Public Dua Wall)</h1>
                 <p className="text-gray-500 font-bangla mt-2">সবার জন্য নেক দোয়া এবং ভালোবাসা এখানে প্রকাশ করুন।</p>
             </div>
@@ -35,7 +37,14 @@ export default async function PublicDuaWallPage() {
                         <div className="flex items-center gap-3 mb-4">
                             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden border border-cream-dark">
                                 {dua.profiles?.avatar_url ? (
-                                    <img src={dua.profiles.avatar_url} className="w-full h-full object-cover" />
+                                    <NextImage
+                                        src={dua.profiles.avatar_url}
+                                        className="w-full h-full object-cover"
+                                        alt="avatar"
+                                        width={40}
+                                        height={40}
+                                        unoptimized
+                                    />
                                 ) : (
                                     <span className="text-primary font-bold">{dua.profiles?.full_name?.charAt(0) || "U"}</span>
                                 )}

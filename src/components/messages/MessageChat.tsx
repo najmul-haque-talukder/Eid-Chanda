@@ -2,8 +2,19 @@
 
 import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
+import NextImage from "next/image";
+import {
+    Phone,
+    MoreVertical,
+    Building2,
+    User,
+    CheckCheck,
+    Check,
+    Smile,
+    Send
+} from "lucide-react";
 
-export function MessageChat({ currentUserId, toUserId, initialToUsername, initialToAvatar }: { currentUserId: string, toUserId: string, initialToUsername: string, initialToAvatar?: string | null }) {
+export function MessageChat({ currentUserId, toUserId, initialToUsername, initialToAvatar, currentUserAvatar }: { currentUserId: string, toUserId: string, initialToUsername: string, initialToAvatar?: string | null, currentUserAvatar?: string | null }) {
     const [messages, setMessages] = useState<any[]>([]);
     const [content, setContent] = useState("");
     const [sending, setSending] = useState(false);
@@ -130,7 +141,14 @@ export function MessageChat({ currentUserId, toUserId, initialToUsername, initia
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-cream border border-primary/20 flex items-center justify-center overflow-hidden">
                         {initialToAvatar ? (
-                            <img src={initialToAvatar} alt="" className="w-full h-full object-cover" />
+                            <NextImage
+                                src={initialToAvatar}
+                                alt=""
+                                className="w-full h-full object-cover"
+                                width={40}
+                                height={40}
+                                unoptimized
+                            />
                         ) : (
                             <span className="text-primary font-bold">{initialToUsername.charAt(0)}</span>
                         )}
@@ -144,8 +162,8 @@ export function MessageChat({ currentUserId, toUserId, initialToUsername, initia
                     </div>
                 </div>
                 <div className="flex gap-2 text-gray-400">
-                    <button className="p-2 hover:bg-white rounded-full transition"><i className="fa-solid fa-phone"></i></button>
-                    <button className="p-2 hover:bg-white rounded-full transition"><i className="fa-solid fa-ellipsis-vertical"></i></button>
+                    <button className="p-2 hover:bg-white rounded-full transition"><Phone size={18} /></button>
+                    <button className="p-2 hover:bg-white rounded-full transition"><MoreVertical size={18} /></button>
                 </div>
             </div>
 
@@ -153,7 +171,7 @@ export function MessageChat({ currentUserId, toUserId, initialToUsername, initia
             <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-[#FDFBF7] scroll-smooth">
                 {messages.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full opacity-40 select-none">
-                        <i className="fa-solid fa-mosque text-6xl mb-4 text-primary"></i>
+                        <Building2 size={64} className="mb-4 text-primary" />
                         <p className="font-bangla font-bold">আসসালামু আলাইকুম!</p>
                         <p className="text-sm">Say Assalamualaikum to start chat</p>
                     </div>
@@ -161,12 +179,30 @@ export function MessageChat({ currentUserId, toUserId, initialToUsername, initia
 
                 {messages.map((msg, i) => {
                     const isMe = msg.sender_id === currentUserId;
+                    const avatar = isMe ? currentUserAvatar : initialToAvatar;
+
                     return (
-                        <div key={msg.id || i} className={`flex ${isMe ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
+                        <div key={msg.id || i} className={`flex ${isMe ? 'justify-end' : 'justify-start'} gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300`}>
+                            {!isMe && (
+                                <div className="w-8 h-8 rounded-full bg-cream border border-primary/10 flex items-center justify-center overflow-hidden shrink-0 self-end mb-5">
+                                    {avatar ? (
+                                        <NextImage
+                                            src={avatar}
+                                            className="w-full h-full object-cover"
+                                            alt=""
+                                            width={32}
+                                            height={32}
+                                            unoptimized
+                                        />
+                                    ) : (
+                                        <User className="text-primary" size={12} />
+                                    )}
+                                </div>
+                            )}
                             <div className={`max-w-[75%] group`}>
                                 <div className={`relative px-4 py-3 rounded-3xl text-sm shadow-sm ${isMe
-                                        ? 'bg-primary text-white rounded-br-none'
-                                        : 'bg-white border border-cream-dark text-gray-800 rounded-bl-none'
+                                    ? 'bg-primary text-white rounded-br-none'
+                                    : 'bg-white border border-cream-dark text-gray-800 rounded-bl-none'
                                     } ${msg.isOptimistic ? 'opacity-60 grayscale' : ''}`}>
                                     <p className="leading-relaxed whitespace-pre-wrap">{msg.content}</p>
                                 </div>
@@ -174,11 +210,27 @@ export function MessageChat({ currentUserId, toUserId, initialToUsername, initia
                                     {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                     {isMe && !msg.isOptimistic && (
                                         <span className={msg.is_read ? 'text-primary' : ''}>
-                                            <i className={`fa-solid ${msg.is_read ? 'fa-check-double' : 'fa-check'}`}></i>
+                                            {msg.is_read ? <CheckCheck size={10} /> : <Check size={10} />}
                                         </span>
                                     )}
                                 </div>
                             </div>
+                            {isMe && (
+                                <div className="w-8 h-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center overflow-hidden shrink-0 self-end mb-5">
+                                    {avatar ? (
+                                        <NextImage
+                                            src={avatar}
+                                            className="w-full h-full object-cover"
+                                            alt=""
+                                            width={32}
+                                            height={32}
+                                            unoptimized
+                                        />
+                                    ) : (
+                                        <User className="text-primary" size={12} />
+                                    )}
+                                </div>
+                            )}
                         </div>
                     );
                 })}
@@ -203,7 +255,7 @@ export function MessageChat({ currentUserId, toUserId, initialToUsername, initia
                             className="w-full rounded-2xl border-2 border-cream-dark bg-cream/20 px-4 py-3 pr-10 text-sm focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all resize-none max-h-32"
                         />
                         <button type="button" className="absolute right-3 text-gray-400 hover:text-primary transition">
-                            <i className="fa-regular fa-face-smile"></i>
+                            <Smile size={20} />
                         </button>
                     </div>
                     <button
@@ -211,7 +263,7 @@ export function MessageChat({ currentUserId, toUserId, initialToUsername, initia
                         disabled={!content.trim() || sending}
                         className="bg-primary hover:bg-primary-dark w-12 h-12 rounded-2xl text-white flex items-center justify-center shadow-lg shadow-primary/30 transition-all active:scale-95 disabled:opacity-50 disabled:shadow-none"
                     >
-                        <i className="fa-solid fa-paper-plane"></i>
+                        <Send size={20} />
                     </button>
                 </form>
             </div>

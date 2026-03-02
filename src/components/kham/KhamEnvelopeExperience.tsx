@@ -3,7 +3,20 @@
 import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
-import * as htmlToImage from "html-to-image";
+import {
+  Bomb,
+  Mail,
+  Clock,
+  ArrowLeftCircle,
+  Link as LinkIcon,
+  Volume2,
+  VolumeX,
+  MoonStar,
+  Download,
+  Heart,
+  Check,
+  ChevronLeft
+} from "lucide-react";
 
 type KhamData = {
   id: string;
@@ -40,7 +53,7 @@ export function KhamEnvelopeExperience({ kham }: Props) {
   const [canOpen, setCanOpen] = useState(false);
   const [isDestructed, setIsDestructed] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [reaction, setReaction] = useState<string | null>(kham.reaction);
+  const [reaction, setReaction] = useState<string | null>(kham.reaction ?? null);
   const [isReacting, setIsReacting] = useState(false);
   const [playMusic, setPlayMusic] = useState(true);
   const [lang, setLang] = useState<"en" | "bn">("bn");
@@ -89,8 +102,24 @@ export function KhamEnvelopeExperience({ kham }: Props) {
   }
 
   async function handleReact(emoji: string) {
-    // Temporarily disabled as the column is missing in DB
-    return;
+    if (isReacting) return;
+    setIsReacting(true);
+    setReaction(emoji);
+
+    try {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from("khams")
+        .update({ reaction: emoji })
+        .eq("id", kham.id);
+
+      if (error) throw error;
+    } catch (err) {
+      console.error("Reaction Sync Error:", err);
+      // Fallback: Optionally reset reaction if sync fails
+    } finally {
+      setIsReacting(false);
+    }
   }
 
   function handleOpen() {
@@ -103,6 +132,7 @@ export function KhamEnvelopeExperience({ kham }: Props) {
     if (!cardRef.current || isSaving) return;
     setIsSaving(true);
     try {
+      const htmlToImage = await import("html-to-image");
       const dataUrl = await htmlToImage.toJpeg(cardRef.current, {
         quality: 1.0,
         backgroundColor: "#ffffff",
@@ -148,8 +178,8 @@ export function KhamEnvelopeExperience({ kham }: Props) {
 
       {isDestructed ? (
         <div className="text-center animate-in fade-in zoom-in duration-500 max-w-sm">
-          <div className="text-7xl mb-6 text-gray-200">
-            <i className="fa-solid fa-burst animate-pulse"></i>
+          <div className="text-7xl mb-6 text-gray-200 flex justify-center">
+            <Bomb className="animate-pulse" size={72} />
           </div>
           <h2 className="text-3xl font-black text-gray-900 mb-3">{lang === "bn" ? "খামটি মুছে গেছে!" : "Kham Expired!"}</h2>
           <p className="text-gray-500 mb-8 leading-relaxed">
@@ -168,7 +198,7 @@ export function KhamEnvelopeExperience({ kham }: Props) {
             </div>
             <div className="absolute inset-x-0 top-0 h-1/2 bg-primary/20 rounded-t-[2rem] border-b border-white/40" style={{ clipPath: "polygon(0 0, 100% 0, 50% 100%)" }} />
             <div className="absolute inset-0 flex items-center justify-center">
-              <i className="fa-solid fa-envelope-heart text-5xl text-primary animate-bounce-short"></i>
+              <Heart className="text-5xl text-primary animate-bounce" size={48} />
             </div>
           </div>
           <h2 className="mt-12 text-3xl font-black text-gray-900 drop-shadow-sm font-bangla">
@@ -185,12 +215,12 @@ export function KhamEnvelopeExperience({ kham }: Props) {
           >
             {canOpen ? (
               <>
-                <i className="fa-solid fa-envelope-open-text"></i>
+                <Mail size={24} />
                 {lang === "bn" ? "খামটি খুলে দেখুন" : "Open Kham Now"}
               </>
             ) : (
               <>
-                <i className="fa-solid fa-clock"></i>
+                <Clock size={24} />
                 {countdown}
               </>
             )}
@@ -200,14 +230,14 @@ export function KhamEnvelopeExperience({ kham }: Props) {
         <div className="w-full max-w-md space-y-6 animate-in fade-in slide-in-from-bottom-20 duration-1000">
           <div className="flex justify-between items-center bg-white/70 backdrop-blur-md p-3 px-5 rounded-[2rem] border-2 border-primary/10 shadow-lg">
             <Link href="/received" className="text-gray-500 hover:text-primary transition-colors flex items-center gap-2 text-xs font-black">
-              <i className="fa-solid fa-circle-left text-lg"></i> {lang === "bn" ? "তালিকায় ফিরে যান" : "Received List"}
+              <ArrowLeftCircle size={20} /> {lang === "bn" ? "তালিকায় ফিরে যান" : "Received List"}
             </Link>
             <div className="flex items-center gap-2">
               <button title="Copy Link" onClick={copyCurrentLink} className="p-2.5 bg-gray-50 rounded-full text-gray-500 hover:text-primary transition-all border border-gray-100">
-                <i className={`fa-solid ${copiedLink ? "fa-check text-green-500" : "fa-link"}`}></i>
+                {copiedLink ? <Check size={18} className="text-green-500" /> : <LinkIcon size={18} />}
               </button>
               <button title="Toggle Sound" onClick={() => setPlayMusic(!playMusic)} className="p-2.5 bg-gray-50 rounded-full text-gray-500 hover:text-primary transition-all border border-gray-100">
-                {playMusic ? <i className="fa-solid fa-volume-high"></i> : <i className="fa-solid fa-volume-xmark"></i>}
+                {playMusic ? <Volume2 size={18} /> : <VolumeX size={18} />}
               </button>
             </div>
           </div>
@@ -219,7 +249,7 @@ export function KhamEnvelopeExperience({ kham }: Props) {
             <div className="flex-1 flex flex-col items-center justify-center p-10 md:p-14 relative z-10">
               {/* Top Icon */}
               <div className="mb-8 relative h-24 flex items-center justify-center">
-                <i className="fa-solid fa-star-and-crescent text-[#E2136E] text-8xl transform -rotate-12 opacity-90 animate-pulse"></i>
+                <MoonStar className="text-[#E2136E] transform -rotate-12 opacity-90 animate-pulse" size={96} />
               </div>
 
               {/* Main Title */}
@@ -305,7 +335,7 @@ export function KhamEnvelopeExperience({ kham }: Props) {
               disabled={isSaving}
               className="w-full bg-gray-900 text-white font-black py-6 rounded-[2.5rem] shadow-2xl flex items-center justify-center gap-3 hover:bg-black hover:-translate-y-1 active:scale-95 transition-all text-xl"
             >
-              {isSaving ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-download"></i>}
+              {isSaving ? <span className="animate-spin">◌</span> : <Download size={24} />}
               {lang === "bn" ? "কার্ডটি গ্যালারিতে সেভ করুন" : "Save This Chithi"}
             </button>
 
@@ -320,7 +350,7 @@ export function KhamEnvelopeExperience({ kham }: Props) {
                 }}
                 className="bg-[#25D366] text-white py-4 rounded-[2rem] font-black flex items-center justify-center gap-2 text-sm shadow-xl hover:opacity-95 hover:scale-[1.02] transition-all"
               >
-                <i className="fa-brands fa-whatsapp text-xl"></i> WHATSAPP
+                WHATSAPP
               </button>
               <button
                 onClick={() => {
@@ -329,7 +359,7 @@ export function KhamEnvelopeExperience({ kham }: Props) {
                 }}
                 className="bg-[#1877F2] text-white py-4 rounded-[2rem] font-black flex items-center justify-center gap-2 text-sm shadow-xl hover:opacity-95 hover:scale-[1.02] transition-all"
               >
-                <i className="fa-brands fa-facebook-f text-xl"></i> FACEBOOK
+                FACEBOOK
               </button>
             </div>
           </div>

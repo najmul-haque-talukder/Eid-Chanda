@@ -2,7 +2,11 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import QRCode from "react-qr-code";
+import Image from "next/image";
+import dynamic from "next/dynamic";
+import { QrCode, Link2, Check } from "lucide-react";
+
+const QRCode = dynamic(() => import("react-qr-code"), { ssr: false });
 
 type Kham = {
   id: string;
@@ -12,7 +16,7 @@ type Kham = {
   created_at: string;
   scheduled_at: string | null;
   delivered_at: string | null;
-  reaction: string | null;
+  reaction?: string | null;
   letter_text: string | null;
   receiver?: {
     username: string;
@@ -49,7 +53,14 @@ export function SentKhamRow({ kham, baseUrl }: Props) {
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center overflow-hidden shrink-0 group-hover:scale-105 transition-transform">
             {kham.receiver?.avatar_url ? (
-              <img src={kham.receiver.avatar_url} className="w-full h-full object-cover" alt="receiver" />
+              <Image
+                src={kham.receiver.avatar_url}
+                className="w-full h-full object-cover"
+                alt="receiver"
+                width={48}
+                height={48}
+                unoptimized
+              />
             ) : (
               <span className="text-[#064e3b] font-black text-lg">
                 {(kham.receiver?.full_name || kham.receiver_name || "U")[0].toUpperCase()}
@@ -81,14 +92,14 @@ export function SentKhamRow({ kham, baseUrl }: Props) {
             className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${showQR ? 'bg-[#064e3b] text-white' : 'text-gray-400 hover:text-[#064e3b] hover:bg-gray-50'}`}
             title="QR Code"
           >
-            <i className="fa-solid fa-qrcode text-sm"></i>
+            <QrCode size={18} />
           </button>
           <button
             onClick={copy}
             className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${copied ? 'bg-green-500 text-white' : 'text-gray-400 hover:text-[#064e3b] hover:bg-gray-50'}`}
             title="Copy Link"
           >
-            <i className={`fa-solid ${copied ? "fa-check" : "fa-link-simple"} text-sm`}></i>
+            {copied ? <Check size={18} /> : <Link2 size={18} />}
           </button>
         </div>
       </div>

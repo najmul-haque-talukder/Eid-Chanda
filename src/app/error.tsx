@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
+import { Bug } from "lucide-react";
 
 export default function RootError({
     error,
@@ -17,7 +18,7 @@ export default function RootError({
     return (
         <div className="min-h-screen bg-cream flex flex-col items-center justify-center p-6 text-center">
             <div className="w-20 h-20 bg-red-100 text-red-500 rounded-full flex items-center justify-center text-3xl mb-6">
-                <i className="fa-solid fa-bug"></i>
+                <Bug size={40} />
             </div>
             <h2 className="text-2xl font-bold font-bangla text-gray-900 mb-2">দুঃখিত, কোনো সমস্যা হয়েছে!</h2>
             <p className="text-gray-500 mb-8 max-w-sm">

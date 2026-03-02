@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { InteractiveKhamCard } from "@/components/kham/InteractiveKhamCard";
+import { MailOpen } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -25,14 +26,18 @@ export default async function ReceivedPage() {
         {!khams?.length && (
           <div className="bg-white p-12 rounded-[2.5rem] border-2 border-cream-dark shadow-xl text-center space-y-4">
             <div className="w-16 h-16 bg-cream rounded-full mx-auto flex items-center justify-center text-primary/30 text-2xl">
-              <i className="fa-solid fa-envelope-open"></i>
+              <MailOpen size={32} />
             </div>
             <p className="text-gray-500 font-bangla text-lg italic">আপনার কাছে এখনো কোনো রিকোয়েস্ট আসেনি।</p>
           </div>
         )}
-        {khams?.map((k) => (
-          <InteractiveKhamCard key={k.id} kham={k} />
-        ))}
+        {khams?.map((k: any) => {
+          const khamData = {
+            ...k,
+            sender: Array.isArray(k.sender) ? k.sender[0] : k.sender
+          };
+          return <InteractiveKhamCard key={k.id} kham={khamData} />;
+        })}
       </div>
     </div>
   );
