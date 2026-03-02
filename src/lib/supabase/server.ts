@@ -8,35 +8,30 @@ export async function createClient() {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    console.error("CRITICAL: Supabase environment variables are missing!");
-    return createServerClient("https://missing.supabase.co", "missing", {
-      cookies: { getAll() { return [] }, setAll() { } }
-    });
+    console.error("DIAGNOSTIC: Supabase environment variables are missing on server!");
+    return createServerClient(
+      supabaseUrl || "https://placeholder-url.supabase.co",
+      supabaseAnonKey || "placeholder-key",
+      {
+        cookies: { getAll() { return [] }, setAll() { } }
+      }
+    );
   }
 
-  try {
-    return createServerClient(supabaseUrl, supabaseAnonKey, {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet: any) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }: any) =>
-              cookieStore.set(name, value, options)
-            );
-          } catch (e) {
-            // This will fail in Server Components, which is expected and fine
-            // as cookies can only be set in Middleware or Server Actions.
-          }
-        },
+  return createServerClient(supabaseUrl, supabaseAnonKey, {
+    cookies: {
+      getAll() {
+        return cookieStore.getAll();
       },
-    });
-  } catch (e) {
-    console.error("Failed to initialize Supabase server client:", e);
-    // Return a basic client to avoid crashing everything
-    return createServerClient(supabaseUrl, supabaseAnonKey, {
-      cookies: { getAll() { return [] }, setAll() { } }
-    });
-  }
+      setAll(cookiesToSet: any[]) {
+        try {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            cookieStore.set(name, value, options)
+          );
+        } catch (e) {
+          // Expected in Server Components
+        }
+      },
+    },
+  });
 }

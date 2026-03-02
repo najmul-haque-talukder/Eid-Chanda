@@ -265,7 +265,7 @@ export function KhamEnvelopeExperience({ kham }: Props) {
                     : "Best wishes for a holy Ramadan! May your Eid be filled with joy with family and loved ones!")}
                 </p>
                 {kham.amount && kham.amount !== "Request" && (
-                  <p className="mt-6 text-4xl font-black text-[#E2136E] drop-shadow-sm font-serif italic">
+                  <p className="mt-6 text-4xl font-black text-[#E2136E] drop-shadow-sm font-bangla">
                     ৳{kham.amount}
                   </p>
                 )}
