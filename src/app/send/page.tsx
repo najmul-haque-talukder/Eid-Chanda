@@ -7,11 +7,23 @@ export default async function SendKhamPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/");
 
-  const { data: profile } = await supabase
+  let { data: profile } = await supabase
     .from("profiles")
     .select("*")
     .eq("id", user.id)
     .single();
+
+  if (!profile) {
+    const fallbackName = user.email?.split("@")[0] || "User";
+    const { data: newProfile } = await supabase.from("profiles").upsert({
+      id: user.id,
+      full_name: user.user_metadata?.full_name || fallbackName,
+      username: user.user_metadata?.username || (fallbackName + Math.floor(Math.random() * 1000)),
+      email: user.email,
+      avatar_url: user.user_metadata?.avatar_url
+    }).select().single();
+    profile = newProfile;
+  }
 
   return (
     <div className="max-w-2xl">

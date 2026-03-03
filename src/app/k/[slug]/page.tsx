@@ -22,7 +22,7 @@ export default async function KhamOpenPage({ params }: Props) {
   if (!kham.anonymous && kham.sender_id) {
     const { data } = await supabase
       .from("profiles")
-      .select("full_name, username, avatar_url, bkash_number, nagad_number, rocket_number, upay_number, dbbl_number")
+      .select("full_name, username, avatar_url, payment_methods")
       .eq("id", kham.sender_id)
       .single();
     senderProfile = data;
@@ -34,13 +34,7 @@ export default async function KhamOpenPage({ params }: Props) {
         ...kham,
         sender_name: senderProfile?.full_name || senderProfile?.username || null,
         sender_avatar: senderProfile?.avatar_url || null,
-        sender_payments: senderProfile ? {
-          bkash: senderProfile.bkash_number,
-          nagad: senderProfile.nagad_number,
-          rocket: senderProfile.rocket_number,
-          upay: senderProfile.upay_number,
-          dbbl: senderProfile.dbbl_number
-        } : null
+        sender_payment_methods: senderProfile?.payment_methods || null
       }}
     />
   );

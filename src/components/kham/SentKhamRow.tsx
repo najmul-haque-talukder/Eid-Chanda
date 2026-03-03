@@ -76,7 +76,7 @@ export function SentKhamRow({ kham, baseUrl }: Props) {
             </h4>
             <div className="flex items-center gap-2 mt-1">
               <span className="text-[10px] font-black text-[#064e3b] bg-[#064e3b]/5 px-2 py-0.5 rounded-full border border-[#064e3b]/10">
-                ৳{kham.amount}
+                {kham.amount === 'Request' ? 'সালামি অনুরোধ' : `৳${kham.amount}`}
               </span>
               <span className="text-[10px] font-medium text-gray-300">
                 {new Date(kham.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}

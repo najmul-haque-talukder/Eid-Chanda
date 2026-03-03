@@ -4,33 +4,37 @@ import { CheckCircle2, AlertCircle, Info, X } from "lucide-react";
 
 interface ToastProps {
     message: string;
+    content?: string;
     type: "success" | "error" | "info";
     onClose: () => void;
 }
 
-export function Toast({ message, type, onClose }: ToastProps) {
+export function Toast({ message, content, type, onClose }: ToastProps) {
     const bgColor = {
-        success: "bg-green-600",
-        error: "bg-red-600",
-        info: "bg-blue-600",
+        success: "bg-white border-green-500",
+        error: "bg-white border-red-500",
+        info: "bg-white border-blue-500",
     }[type];
 
     const icon = {
-        success: <CheckCircle2 size={20} />,
-        error: <AlertCircle size={20} />,
-        info: <Info size={20} />,
+        success: <CheckCircle2 className="text-green-500" size={20} />,
+        error: <AlertCircle className="text-red-500" size={20} />,
+        info: <Info className="text-blue-500" size={20} />,
     }[type];
 
     return (
-        <div className="fixed top-20 right-4 z-[9999] animate-fade-in-right">
-            <div className={`${bgColor} text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 min-w-[300px]`}>
-                <span className="text-xl">{icon}</span>
-                <p className="font-bold font-bangla flex-1">{message}</p>
+        <div className="fixed top-20 right-4 z-[9999] animate-fade-in-right max-w-sm w-full">
+            <div className={`bg-white border-l-4 ${bgColor} p-4 rounded-xl shadow-2xl flex gap-3 items-start backdrop-blur-sm bg-white/95`}>
+                <div className="mt-0.5">{icon}</div>
+                <div className="flex-1">
+                    <h5 className="font-bold text-gray-900 text-sm font-bangla">{message}</h5>
+                    {content && <p className="text-xs text-gray-500 mt-1 font-bangla line-clamp-2">{content}</p>}
+                </div>
                 <button
                     onClick={onClose}
-                    className="hover:rotate-90 transition-transform p-1"
+                    className="text-gray-400 hover:text-gray-600 transition-colors p-1"
                 >
-                    <X size={20} />
+                    <X size={18} />
                 </button>
             </div>
         </div>

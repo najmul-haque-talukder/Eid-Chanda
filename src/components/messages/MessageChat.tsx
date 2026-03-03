@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import NextImage from "next/image";
+import { io, Socket } from "socket.io-client";
 import {
     Phone,
     MoreVertical,
@@ -14,62 +15,77 @@ import {
     Send
 } from "lucide-react";
 
+import { useSocket } from "@/lib/socket/SocketProvider";
+
 export function MessageChat({ currentUserId, toUserId, initialToUsername, initialToAvatar, currentUserAvatar }: { currentUserId: string, toUserId: string, initialToUsername: string, initialToAvatar?: string | null, currentUserAvatar?: string | null }) {
+    const { socket, isConnected } = useSocket();
     const [messages, setMessages] = useState<any[]>([]);
     const [content, setContent] = useState("");
     const [sending, setSending] = useState(false);
+    const [isTyping, setIsTyping] = useState(false);
+    const [othersTyping, setOthersTyping] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const supabase = createClient();
 
     useEffect(() => {
         loadMessages();
 
-        // Optimized realtime subscription
-        const channel = supabase
-            .channel(`chat:${currentUserId}:${toUserId}`)
-            .on(
-                'postgres_changes',
-                {
-                    event: 'INSERT',
-                    schema: 'public',
-                    table: 'messages',
-                    filter: `receiver_id=eq.${currentUserId}`
-                },
-                (payload) => {
-                    const newMsg = payload.new;
-                    if (newMsg.sender_id === toUserId) {
-                        setMessages(prev => {
-                            // Prevent double messages
-                            if (prev.some(m => m.id === newMsg.id)) return prev;
-                            return [...prev, newMsg];
-                        });
-                        markAsRead(newMsg.id);
-                    }
-                }
-            )
-            .on(
-                'postgres_changes',
-                {
-                    event: 'UPDATE',
-                    schema: 'public',
-                    table: 'messages',
-                    filter: `sender_id=eq.${currentUserId}`
-                },
-                (payload) => {
-                    const updated = payload.new;
-                    setMessages(prev => prev.map(m => m.id === updated.id ? updated : m));
-                }
-            )
-            .subscribe();
+        if (socket) {
+            console.log("[CHAT] Attaching socket listeners for conversation with:", toUserId);
+            socket.on("message", handleNewMessage);
+            socket.on("user_typing", handleUserTyping);
+            socket.on("user_stop_typing", handleUserStopTyping);
+        } else {
+            console.warn("[CHAT] Socket not available for listeners!");
+        }
 
         return () => {
-            supabase.removeChannel(channel);
+            if (socket) {
+                console.log("[CHAT] Detaching socket listeners");
+                socket.off("message", handleNewMessage);
+                socket.off("user_typing", handleUserTyping);
+                socket.off("user_stop_typing", handleUserStopTyping);
+            }
         };
-    }, [currentUserId, toUserId]);
+    }, [socket, toUserId]);
+
+    const handleNewMessage = (newMsg: any) => {
+        console.log("[CHAT] Received socket message:", newMsg.id);
+        if (
+            (newMsg.sender_id === toUserId && newMsg.receiver_id === currentUserId) ||
+            (newMsg.sender_id === currentUserId && newMsg.receiver_id === toUserId)
+        ) {
+            console.log("[CHAT] Message is relevant, updating state");
+            setMessages((prev) => {
+                if (prev.some((m) => m.id === newMsg.id)) {
+                    console.log("[CHAT] Duplicate message ignored");
+                    return prev;
+                }
+                return [...prev, newMsg];
+            });
+
+            if (newMsg.receiver_id === currentUserId) {
+                markAsRead(newMsg.id);
+            }
+        } else {
+            console.log("[CHAT] Message not relevant to this room, ignored");
+        }
+    };
+
+    const handleUserTyping = ({ sender_id }: { sender_id: string }) => {
+        console.log("[CHAT] User typing event:", sender_id);
+        if (sender_id === toUserId) setOthersTyping(true);
+    };
+
+    const handleUserStopTyping = ({ sender_id }: { sender_id: string }) => {
+        console.log("[CHAT] User stop typing event:", sender_id);
+        if (sender_id === toUserId) setOthersTyping(false);
+    };
 
     useEffect(() => {
         scrollToBottom();
-    }, [messages]);
+    }, [messages, othersTyping]);
 
     function scrollToBottom() {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -80,15 +96,18 @@ export function MessageChat({ currentUserId, toUserId, initialToUsername, initia
     }
 
     async function loadMessages() {
-        const { data } = await supabase
+        const { data, error } = await supabase
             .from("messages")
             .select("*")
             .or(`and(sender_id.eq.${currentUserId},receiver_id.eq.${toUserId}),and(sender_id.eq.${toUserId},receiver_id.eq.${currentUserId})`)
             .order("created_at", { ascending: true });
 
+        if (error) {
+            console.error("Messages Fetch Error:", error.message);
+        }
+
         if (data) {
             setMessages(data);
-            // Mark all received as read instantly
             const unreadIds = data.filter(m => m.receiver_id === currentUserId && !m.is_read).map(m => m.id);
             if (unreadIds.length > 0) {
                 await supabase.from("messages").update({ is_read: true }).in("id", unreadIds);
@@ -96,13 +115,29 @@ export function MessageChat({ currentUserId, toUserId, initialToUsername, initia
         }
     }
 
+    const handleContentChange = (val: string) => {
+        setContent(val);
+        if (!socket) return;
+
+        if (!isTyping) {
+            setIsTyping(true);
+            socket.emit("typing", { sender_id: currentUserId, receiver_id: toUserId });
+        }
+
+        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+
+        typingTimeoutRef.current = setTimeout(() => {
+            setIsTyping(false);
+            socket.emit("stop_typing", { sender_id: currentUserId, receiver_id: toUserId });
+        }, 2000);
+    };
+
     async function sendMessage(e: React.FormEvent) {
         e.preventDefault();
         const text = content.trim();
         if (!text) return;
 
-        // Optimistic Update: Add message immediately for "Zero Latency" feel
-        const tempId = Math.random().toString(36).substring(7);
+        const tempId = "optimistic-" + Math.random().toString(36).substring(7);
         const optimisticMsg = {
             id: tempId,
             sender_id: currentUserId,
@@ -115,6 +150,8 @@ export function MessageChat({ currentUserId, toUserId, initialToUsername, initia
 
         setMessages(prev => [...prev, optimisticMsg]);
         setContent("");
+        setIsTyping(false);
+        if (socket) socket.emit("stop_typing", { sender_id: currentUserId, receiver_id: toUserId });
         setSending(true);
 
         const { data, error } = await supabase.from("messages").insert({
@@ -124,10 +161,10 @@ export function MessageChat({ currentUserId, toUserId, initialToUsername, initia
         }).select().single();
 
         if (data && !error) {
-            // Replace optimistic message with real message
+            // Emit via socket for instant delivery
+            if (socket) socket.emit("send_message", data);
             setMessages(prev => prev.map(m => m.id === tempId ? data : m));
         } else {
-            // Remove optimistic message on error
             setMessages(prev => prev.filter(m => m.id !== tempId));
             alert("Message failed to send. Please try again.");
         }
@@ -156,8 +193,10 @@ export function MessageChat({ currentUserId, toUserId, initialToUsername, initia
                     <div>
                         <h3 className="font-bold text-gray-900">@{initialToUsername}</h3>
                         <div className="flex items-center gap-1.5">
-                            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                            <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Online</span>
+                            <span className={`w-2 h-2 rounded-full ${othersTyping ? 'bg-primary animate-bounce' : 'bg-green-500 animate-pulse'}`}></span>
+                            <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">
+                                {othersTyping ? 'Typing...' : 'Online'}
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -234,6 +273,22 @@ export function MessageChat({ currentUserId, toUserId, initialToUsername, initia
                         </div>
                     );
                 })}
+                {othersTyping && (
+                    <div className="flex justify-start gap-2 animate-pulse">
+                        <div className="w-8 h-8 rounded-full bg-cream border border-primary/10 flex items-center justify-center overflow-hidden shrink-0 self-end mb-5">
+                            {initialToAvatar ? (
+                                <NextImage src={initialToAvatar} width={32} height={32} className="w-full h-full object-cover" alt="" unoptimized />
+                            ) : (
+                                <User className="text-primary" size={12} />
+                            )}
+                        </div>
+                        <div className="bg-white border border-cream-dark px-4 py-2 rounded-2xl flex items-center gap-1">
+                            <span className="w-1 h-1 bg-gray-400 rounded-full animate-bounce"></span>
+                            <span className="w-1 h-1 bg-gray-400 rounded-full animate-bounce [animation-delay:0.2s]"></span>
+                            <span className="w-1 h-1 bg-gray-400 rounded-full animate-bounce [animation-delay:0.4s]"></span>
+                        </div>
+                    </div>
+                )}
                 <div ref={messagesEndRef} />
             </div>
 
@@ -244,7 +299,7 @@ export function MessageChat({ currentUserId, toUserId, initialToUsername, initia
                         <textarea
                             rows={1}
                             value={content}
-                            onChange={e => setContent(e.target.value)}
+                            onChange={e => handleContentChange(e.target.value)}
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter' && !e.shiftKey) {
                                     e.preventDefault();

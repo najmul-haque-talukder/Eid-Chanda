@@ -1,6 +1,6 @@
 "use client";
 
-import { useLanguage } from "@/components/LanguageContext";
+import { useLanguage } from "@/lib/redux/LanguageSync";
 import Link from "next/link";
 import { BookOpen, UserPlus, LogOut } from "lucide-react";
 

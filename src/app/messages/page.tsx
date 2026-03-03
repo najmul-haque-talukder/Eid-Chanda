@@ -31,14 +31,18 @@ export default async function MessagesPage({ searchParams }: { searchParams: Pro
             if (friendIds.length > 0) {
                 const { data: fProfiles } = await supabase.from("profiles").select("id, username, full_name, avatar_url").in("id", friendIds);
 
-                const { data: unreadMsgs } = await supabase.from("messages").select("sender_id").eq("receiver_id", user.id).eq("is_read", false);
+                const { data: unreadMsgs, error: unreadError } = await supabase.from("messages").select("sender_id, is_read").eq("receiver_id", user.id).eq("is_read", false);
+
+                if (unreadError) {
+                    console.error("Messages Unread Fetch Error:", unreadError.message);
+                }
+
                 const unreadMap: Record<string, number> = {};
                 if (unreadMsgs) {
                     unreadMsgs.forEach(m => {
                         unreadMap[m.sender_id] = (unreadMap[m.sender_id] || 0) + 1;
                     });
                 }
-
                 if (fProfiles) {
                     friendsList = fProfiles.map(f => ({
                         ...f,

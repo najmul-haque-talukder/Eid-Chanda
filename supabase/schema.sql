@@ -18,11 +18,7 @@ create table if not exists public.profiles (
   phone text,
   show_phone boolean default true,
   card_quote text,
-  bkash_number text,
-  nagad_number text,
-  rocket_number text,
-  upay_number text,
-  dbbl_number text,
+  payment_methods jsonb default '[]'::jsonb,
   updated_at timestamptz default now()
 );
 
@@ -71,8 +67,8 @@ begin
   insert into public.profiles (id, full_name, username, email, avatar_url)
   values (
     new.id,
-    coalesce(new.raw_user_meta_data->>'full_name', 'User'),
-    coalesce(new.raw_user_meta_data->>'username', 'user_' || replace(left(new.id::text, 8), '-', '')),
+    coalesce(new.raw_user_meta_data->>'full_name', split_part(new.email, '@', 1)),
+    coalesce(lower(new.raw_user_meta_data->>'username'), split_part(new.email, '@', 1) || floor(random()*1000)::text),
     new.email,
     new.raw_user_meta_data->>'avatar_url'
   )
@@ -127,6 +123,16 @@ drop policy if exists "Anyone can view a kham by slug" on public.khams;
 create policy "Anyone can view a kham by slug"
   on public.khams for select
   using (true);
+
+drop policy if exists "Users can see what they sent" on public.khams;
+create policy "Users can see what they sent"
+  on public.khams for select
+  using (auth.uid() = sender_id);
+
+drop policy if exists "Users can see what they received" on public.khams;
+create policy "Users can see what they received"
+  on public.khams for select
+  using (auth.uid() = receiver_id);
 
 drop policy if exists "Authenticated users can insert khams" on public.khams;
 create policy "Authenticated users can insert khams"
@@ -198,6 +204,67 @@ create policy "Duas are viewable by everyone" on public.duas for select using (t
 drop policy if exists "Users can manage own duas" on public.duas;
 create policy "Users can manage own duas" on public.duas using (auth.uid() = user_id);
 
+-- Notifications Table
+create table if not exists public.notifications (
+  id uuid primary key default uuid_generate_v4(),
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  type text not null, -- 'message', 'kham', 'dua'
+  title text not null,
+  content text not null,
+  link text,
+  is_read boolean default false,
+  created_at timestamptz default now()
+);
+alter table public.notifications enable row level security;
+drop policy if exists "Users can view own notifications" on public.notifications;
+create policy "Users can view own notifications" on public.notifications using (auth.uid() = user_id);
+
+-- Trigger function for new messages
+create or replace function public.handle_new_message_notification()
+returns trigger as $$
+begin
+  insert into public.notifications (user_id, type, title, content, link)
+  values (
+    new.receiver_id,
+    'message',
+    'New Message',
+    substring(new.content from 1 for 50),
+    '/messages?u=' || new.sender_id
+  );
+  return new;
+end;
+$$ language plpgsql security definer;
+
+drop trigger if exists on_message_created on public.messages;
+create trigger on_message_created
+  after insert on public.messages
+  for each row execute function public.handle_new_message_notification();
+
+-- Trigger function for new khams
+create or replace function public.handle_new_kham_notification()
+returns trigger as $$
+declare
+  sender_name text;
+begin
+  select full_name into sender_name from public.profiles where id = new.sender_id;
+  
+  insert into public.notifications (user_id, type, title, content, link)
+  values (
+    new.receiver_id,
+    'kham',
+    'New Salami received!',
+    coalesce(sender_name, 'Someone') || ' sent you a digital card.',
+    '/received'
+  );
+  return new;
+end;
+$$ language plpgsql security definer;
+
+drop trigger if exists on_kham_created on public.khams;
+create trigger on_kham_created
+  after insert on public.khams
+  for each row execute function public.handle_new_kham_notification();
+
 ------------------------------------------------------------------
 -- 5. FINAL TASKS
 ------------------------------------------------------------------
@@ -207,3 +274,11 @@ NOTIFY pgrst, 'reload schema';
 
 -- Retroactively confirm all old users
 UPDATE auth.users SET email_confirmed_at = now() WHERE email_confirmed_at IS NULL;
+
+-- Retroactively create profiles for users that don't have one
+INSERT INTO public.profiles (id, username, full_name, email)
+SELECT u.id, split_part(u.email, '@', 1) || floor(random()*1000)::text, split_part(u.email, '@', 1), u.email
+FROM auth.users u
+LEFT JOIN public.profiles p ON u.id = p.id
+WHERE p.id IS NULL
+ON CONFLICT (id) DO NOTHING;

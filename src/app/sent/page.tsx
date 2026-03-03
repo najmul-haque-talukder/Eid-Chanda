@@ -14,11 +14,36 @@ export default async function SentPage({ searchParams }: Props) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/");
 
-  const { data: khams } = await supabase
+  // Ensure profile exists
+  let { data: myProfile } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("id", user.id)
+    .single();
+
+  if (!myProfile) {
+    const fallbackName = user.email?.split("@")[0] || "User";
+    await supabase.from("profiles").upsert({
+      id: user.id,
+      full_name: user.user_metadata?.full_name || fallbackName,
+      username: user.user_metadata?.username || (fallbackName + Math.floor(Math.random() * 1000)),
+      email: user.email,
+      avatar_url: user.user_metadata?.avatar_url
+    });
+  }
+
+  const { data: khams, error } = await supabase
     .from("khams")
-    .select("id, slug, receiver_name, receiver_id, amount, created_at, scheduled_at, delivered_at, reaction, letter_text, receiver:profiles!receiver_id(username, full_name, avatar_url)")
+    .select("id, slug, receiver_name, receiver_id, amount, created_at, scheduled_at, delivered_at, letter_text, anonymous, reaction, receiver:profiles!receiver_id(username, full_name, avatar_url)")
     .eq("sender_id", user.id)
     .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Sent Page Error:", error.message);
+  }
+
+  // DIAGNOSTIC
+  console.log(`DIAGNOSTIC - Sent Page for User ${user.id}: Found ${khams?.length || 0} items`);
 
   const headersList = await headers();
   const host = headersList.get("x-forwarded-host") || headersList.get("host") || "";

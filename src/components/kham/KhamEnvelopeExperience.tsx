@@ -36,13 +36,7 @@ type KhamData = {
   auto_destruct: boolean;
   payment_method?: string | null;
   payment_number?: string | null;
-  sender_payments?: {
-    bkash?: string | null;
-    nagad?: string | null;
-    rocket?: string | null;
-    upay?: string | null;
-    dbbl?: string | null;
-  } | null;
+  sender_payment_methods?: any[] | null;
 };
 
 type Props = { kham: KhamData };
@@ -274,38 +268,18 @@ export function KhamEnvelopeExperience({ kham }: Props) {
               {/* Content Grid for Payment and Sender */}
               <div className="w-full mt-auto flex flex-col gap-4">
                 {/* All Payment Methods (Left Aligned) */}
-                <div className="flex flex-col gap-0.5 text-left border-l-4 border-[#E2136E]/20 pl-4 py-1">
-                  {kham.sender_payments ? (
+                <div className="flex flex-col gap-2 text-left border-l-4 border-[#E2136E]/20 pl-4 py-1">
+                  {kham.sender_payment_methods && kham.sender_payment_methods.length > 0 ? (
                     <>
-                      {kham.sender_payments.bkash && (
-                        <p className="text-base font-bold text-gray-800 font-bangla">
-                          বিকাশ : <span className="font-mono text-gray-500 ml-1">{kham.sender_payments.bkash}</span>
+                      {kham.sender_payment_methods.map((pm: any, idx: number) => (
+                        <p key={idx} className="text-base font-bold text-gray-800 font-bangla">
+                          {pm.provider} {pm.label ? `(${pm.label})` : ''} : <span className="font-mono text-gray-500 ml-1">{pm.number}</span>
                         </p>
-                      )}
-                      {kham.sender_payments.nagad && (
-                        <p className="text-base font-bold text-gray-800 font-bangla">
-                          নগদ : <span className="font-mono text-gray-500 ml-1">{kham.sender_payments.nagad}</span>
-                        </p>
-                      )}
-                      {kham.sender_payments.rocket && (
-                        <p className="text-base font-bold text-gray-800 font-bangla">
-                          রকেট : <span className="font-mono text-gray-500 ml-1">{kham.sender_payments.rocket}</span>
-                        </p>
-                      )}
-                      {kham.sender_payments.upay && (
-                        <p className="text-base font-bold text-gray-800 font-bangla">
-                          উপায় : <span className="font-mono text-gray-500 ml-1">{kham.sender_payments.upay}</span>
-                        </p>
-                      )}
-                      {kham.sender_payments.dbbl && (
-                        <p className="text-base font-bold text-gray-800 font-bangla">
-                          ডাচ-বাংলা : <span className="font-mono text-gray-500 ml-1">{kham.sender_payments.dbbl}</span>
-                        </p>
-                      )}
+                      ))}
                     </>
                   ) : (
                     <p className="text-base font-bold text-gray-800 font-bangla">
-                      {kham.payment_method}ঃ <span className="font-mono text-gray-500 ml-1">{kham.payment_number}</span>
+                      {kham.payment_method}ঃ <span className="font-mono text-gray-500 ml-1">{kham.payment_number || "Not shared"}</span>
                     </p>
                   )}
                 </div>

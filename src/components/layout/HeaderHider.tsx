@@ -19,7 +19,7 @@ export function HeaderHider({ children }: { children: React.ReactNode }) {
     const isPublicPage =
         pathname === "/auth/callback" ||
         pathname?.startsWith("/k/") ||
-        (pathname !== "/" && !["/send", "/sent", "/received", "/friends", "/messages", "/dua-wall", "/public-dua", "/about", "/card", "/archive"].includes(pathname));
+        (pathname && pathname !== "/" && !["/send", "/sent", "/received", "/friends", "/messages", "/dua-wall", "/public-dua", "/about", "/card", "/archive"].includes(pathname));
 
     if (isPublicPage) {
         return <>{children}</>;

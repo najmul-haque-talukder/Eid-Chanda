@@ -4,8 +4,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { useLanguage } from "@/components/LanguageContext";
+import { useLanguage } from "@/lib/redux/LanguageSync";
 import type { User } from "@supabase/supabase-js";
+import { useSelector } from "react-redux";
+import { RootState } from "@/lib/redux/store";
 import {
   User as UserIcon,
   Send,
@@ -15,10 +17,11 @@ import {
   MessageSquareDiff,
   BookOpen,
   Info,
-  Languages,
   LogOut,
-  Bell
+  Bell,
+  Languages
 } from "lucide-react";
+import { NotificationCenter } from "@/components/notifications/NotificationCenter";
 
 const mainNav = [
   { href: "/", labelKey: "dashboard.profile", icon: <UserIcon size={18} /> },
@@ -118,7 +121,7 @@ export function DashboardSidebar({ user }: { user: User | null }) {
 
   return (
     <>
-      {/* Mobile Bottom Navigation (6 Main Items) */}
+      {/* Mobile Bottom Navigation */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-cream-dark flex items-center justify-around z-50 pb-safe">
         {mainNav.map(({ href, labelKey, icon }) => (
           <Link
@@ -155,6 +158,7 @@ export function DashboardSidebar({ user }: { user: User | null }) {
               <Languages size={14} className="opacity-60" />
               {lang === 'bn' ? 'English' : 'বাংলা'}
             </button>
+            {user && <NotificationCenter currentUserId={user.id} />}
             {user && (
               <button
                 onClick={signOut}
@@ -167,13 +171,12 @@ export function DashboardSidebar({ user }: { user: User | null }) {
             )}
           </div>
         </div>
-        {/* Mobile Sub-Header Links for Dua Wall and About */}
-        <div className="flex items-center justify-center gap-6 pb-3 px-4">
+        <div className="flex items-center justify-center gap-4 pb-3 px-4 overflow-x-auto no-scrollbar">
           {auxNav.map(({ href, labelKey, icon }) => (
             <Link
               key={href}
               href={href}
-              className={`flex items-center gap-2 text-xs font-bold px-3 py-1.5 rounded-lg transition-all ${pathname === href ? "bg-primary/10 text-primary" : "text-gray-500 hover:text-primary"}`}
+              className={`flex items-center gap-2 text-xs font-bold px-3 py-1.5 rounded-lg transition-all shrink-0 ${pathname === href ? "bg-primary/10 text-primary" : "text-gray-500 hover:text-primary"}`}
             >
               <span className="text-sm opacity-70">{icon}</span>
               <span className="font-bangla">{t[labelKey]}</span>
@@ -183,7 +186,7 @@ export function DashboardSidebar({ user }: { user: User | null }) {
       </div>
 
       {/* Desktop Sidebar (Icon + Text) */}
-      <aside className="hidden md:flex w-64 shrink-0 border-r border-cream-dark bg-white flex-col h-screen sticky top-0 py-6">
+      <aside className="hidden md:flex w-64 shrink-0 border-r border-cream-dark bg-white flex-col h-screen sticky top-0 py-6 z-50">
         <div className="px-6 mb-8 relative flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <p className="font-bold text-primary text-2xl font-bangla tracking-tight select-none mt-1">ঈদ চান্দা</p>
@@ -196,6 +199,7 @@ export function DashboardSidebar({ user }: { user: User | null }) {
             <Languages size={14} className="opacity-60 group-hover:opacity-100" />
             <span>{lang === 'bn' ? 'English' : 'বাংলা'}</span>
           </button>
+          {user && <NotificationCenter currentUserId={user.id} />}
         </div>
 
         <nav className="flex-1 w-full px-4 space-y-1 overflow-y-auto">

@@ -10,12 +10,39 @@ export default async function ReceivedPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/");
 
+  // Ensure profile exists
+  let { data: myProfile } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("id", user.id)
+    .single();
+
+  if (!myProfile) {
+    const fallbackName = user.email?.split("@")[0] || "User";
+    await supabase.from("profiles").upsert({
+      id: user.id,
+      full_name: user.user_metadata?.full_name || fallbackName,
+      username: user.user_metadata?.username || (fallbackName + Math.floor(Math.random() * 1000)),
+      email: user.email,
+      avatar_url: user.user_metadata?.avatar_url
+    });
+  }
+
   // Fetch khams where this user is the receiver
-  const { data: khams } = await supabase
+  const { data: khams, error } = await supabase
     .from("khams")
-    .select("*, sender:profiles!sender_id(full_name, username, avatar_url, bkash_number, nagad_number, rocket_number, upay_number, dbbl_number)")
+    .select("id, slug, receiver_name, receiver_id, amount, created_at, scheduled_at, delivered_at, letter_text, anonymous, reaction, payment_method, payment_number, sender:profiles!sender_id(full_name, username, avatar_url, payment_methods)")
     .eq("receiver_id", user.id)
     .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Received Page Error:", error.message);
+  }
+
+  // DIAGNOSTIC
+  const { data: allKhams } = await supabase.from("khams").select("id, receiver_id, sender_id").limit(5);
+  console.log(`DIAGNOSTIC - Total Raw Khams (limit 5):`, allKhams);
+  console.log(`DIAGNOSTIC - Received Page for User ${user.id}: Found ${khams?.length || 0} items`);
 
   return (
     <div className="max-w-2xl animate-in fade-in duration-500 pb-20">

@@ -24,11 +24,7 @@ type Kham = {
         full_name: string | null;
         username: string | null;
         avatar_url: string | null;
-        bkash_number?: string | null;
-        nagad_number?: string | null;
-        rocket_number?: string | null;
-        upay_number?: string | null;
-        dbbl_number?: string | null;
+        payment_methods?: any[] | null;
     } | null;
     payment_method?: string | null;
     payment_number?: string | null;
@@ -146,7 +142,7 @@ export function InteractiveKhamCard({ kham }: Props) {
                             </button>
                         </div>
 
-                        <div className="flex-1 p-5 md:p-6 flex flex-col items-center justify-center text-center relative z-10">
+                        <div className="flex-1 p-5 md:p-6 pb-8 flex flex-col items-center justify-center text-center relative z-10">
                             {/* Moon Icon */}
                             <div className="mb-2">
                                 <MoonStar size={48} className="text-[#E2136E] opacity-90" />
@@ -154,29 +150,28 @@ export function InteractiveKhamCard({ kham }: Props) {
 
                             <h3 className="text-2xl md:text-3xl font-black text-[#E2136E] font-bangla mb-1">ঈদ মোবারক!</h3>
 
-                            <div className="max-w-xs mb-3">
+                            <div className="max-w-xs mb-4">
                                 <p className="text-base font-bangla text-gray-800 leading-relaxed font-medium">
                                     {kham.letter_text || "ঈদ মোবারক! আপনাকে পবিত্র রমজানের শুভেচ্ছা!"}
                                 </p>
                             </div>
 
                             {/* Info Section */}
-                            <div className="w-full mt-auto flex flex-col gap-3">
+                            <div className="w-full mt-auto flex flex-col gap-4">
                                 {/* Left Aligned Payment labels */}
-                                <div className="flex flex-col gap-0.5 text-left border-l-4 border-[#E2136E]/10 pl-3 py-0.5">
-                                    {kham.sender?.bkash_number && <p className="text-sm font-bold text-gray-700 font-bangla">বিকাশ : <span className="font-mono text-gray-500">{kham.sender.bkash_number}</span></p>}
-                                    {kham.sender?.nagad_number && <p className="text-sm font-bold text-gray-700 font-bangla">নগদ : <span className="font-mono text-gray-500">{kham.sender.nagad_number}</span></p>}
-                                    {kham.sender?.rocket_number && <p className="text-sm font-bold text-gray-700 font-bangla">রকেট : <span className="font-mono text-gray-500">{kham.sender.rocket_number}</span></p>}
-                                    {kham.sender?.upay_number && <p className="text-sm font-bold text-gray-700 font-bangla">উপায় : <span className="font-mono text-gray-500">{kham.sender.upay_number}</span></p>}
-                                    {kham.sender?.dbbl_number && <p className="text-sm font-bold text-gray-700 font-bangla">ডাচ-বাংলা : <span className="font-mono text-gray-500">{kham.sender.dbbl_number}</span></p>}
-
-                                    {!kham.sender?.bkash_number && !kham.sender?.nagad_number && !kham.sender?.rocket_number && kham.payment_number && (
+                                <div className="flex flex-col gap-2 text-left border-l-4 border-[#E2136E]/10 pl-3 py-1 mt-2">
+                                    {kham.sender?.payment_methods?.map((pm: any, idx: number) => (
+                                        <p key={idx} className="text-sm font-bold text-gray-700 font-bangla">
+                                            {pm.provider} {pm.label ? `(${pm.label})` : ''} : <span className="font-mono text-gray-500">{pm.number}</span>
+                                        </p>
+                                    ))}
+                                    {(!kham.sender?.payment_methods || kham.sender.payment_methods.length === 0) && kham.payment_number && (
                                         <p className="text-sm font-bold text-gray-700 font-bangla">{kham.payment_method} : <span className="font-mono text-gray-500">{kham.payment_number}</span></p>
                                     )}
                                 </div>
 
                                 {/* Bottom Right Attribution */}
-                                <div className="text-right">
+                                <div className="text-right pb-2">
                                     <p className="text-xs text-gray-500 font-bangla">
                                         পাঠিয়েছেন : <span className="font-black text-[#E2136E] text-base">{kham.anonymous ? "গোপন বন্ধু" : (kham.sender?.full_name || "আপনার আপনজন")}</span>
                                     </p>

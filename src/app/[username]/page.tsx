@@ -12,7 +12,7 @@ export default async function PublicProfilePage({ params }: Props) {
   const supabase = await createClient();
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, username, full_name, avatar_url, phone, show_phone, card_quote, bkash_number, nagad_number, rocket_number, upay_number, dbbl_number")
+    .select("id, username, full_name, avatar_url, phone, show_phone, card_quote, payment_methods")
     .eq("username", slug)
     .single();
 

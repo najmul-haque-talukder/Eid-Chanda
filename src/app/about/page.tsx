@@ -1,15 +1,18 @@
 "use client";
 
-import { useLanguage } from "@/components/LanguageContext";
+import { useLanguage } from "@/lib/redux/LanguageSync";
 import {
     Contact,
     MailOpen,
     Clock,
-    Archive
+    Archive,
+    Code,
+    Globe,
+    Facebook
 } from "lucide-react";
 
 export default function AboutPage() {
-    const { lang } = useLanguage();
+    const { lang, t } = useLanguage();
 
     return (
         <div className="max-w-2xl animate-fade-in pb-20">
@@ -86,6 +89,56 @@ export default function AboutPage() {
                         </p>
                     </section>
                 </div>
+
+                <section className="pt-12 border-t border-cream-dark space-y-8 mt-4">
+                    <div className="space-y-2">
+                        <h2 className="text-xl font-bold text-gray-900 border-l-4 border-primary pl-4 tracking-tight uppercase">
+                            {t["about.devTitle"]}
+                        </h2>
+                    </div>
+
+                    <div className="bg-white p-0 rounded-none transition-all">
+                        <div className="space-y-6">
+                            <div className="space-y-3">
+                                <h3 className="text-2xl font-black text-gray-900 tracking-tight">
+                                    {t["about.devName"]}
+                                </h3>
+                                <div className="flex flex-col gap-1">
+                                    <p className="text-primary font-bold text-sm tracking-wide">
+                                        {t["about.devStudies"]}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="max-w-xl">
+                                <p className="text-gray-600 font-medium leading-[1.8] text-[0.95rem]">
+                                    {t["about.devBio"]}
+                                </p>
+                            </div>
+
+                            <div className="flex flex-wrap gap-3 pt-2">
+                                <a
+                                    href="https://najmul-haque-talukder-41.vercel.app/"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-3 text-xs font-black uppercase tracking-widest text-gray-700 bg-gray-50 px-5 py-3 rounded-full border border-gray-200 hover:bg-primary hover:text-white hover:border-primary transition-all duration-300"
+                                >
+                                    <Globe size={16} />
+                                    {t["about.portfolio"]}
+                                </a>
+                                <a
+                                    href="https://www.facebook.com/najmul.9341"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-3 text-xs font-black uppercase tracking-widest text-[#1877F2] bg-[#1877F2]/5 px-5 py-3 rounded-full border border-[#1877F2]/20 hover:bg-[#1877F2] hover:text-white hover:border-[#1877F2] transition-all duration-300"
+                                >
+                                    <Facebook size={16} />
+                                    {t["about.facebook"]}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </section>
 
                 <div className="pt-8 border-t border-cream-dark text-center">
                     <p className="text-xs text-gray-400 font-mono">

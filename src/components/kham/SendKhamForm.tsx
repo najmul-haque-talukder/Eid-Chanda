@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import { useToast } from "@/components/ToastContext";
+import { useToast } from "@/lib/redux/ToastSync";
 import { useState, useEffect, useRef } from "react";
 import NextImage from "next/image";
 import {
@@ -18,11 +18,7 @@ type Profile = {
   username: string;
   full_name: string | null;
   avatar_url: string | null;
-  bkash_number?: string | null;
-  nagad_number?: string | null;
-  rocket_number?: string | null;
-  upay_number?: string | null;
-  dbbl_number?: string | null;
+  payment_methods?: any[] | null;
 };
 
 type UserSearchResult = {
@@ -47,7 +43,7 @@ export function SendKhamForm({ senderId, senderProfile }: { senderId: string, se
   const [selectedUser, setSelectedUser] = useState<UserSearchResult | null>(null);
   const [message, setMessage] = useState("Eid Mubarak! Salami din bkash e...");
   const [platform, setPlatform] = useState("bKash");
-  const [number, setNumber] = useState(senderProfile?.bkash_number || senderProfile?.nagad_number || senderProfile?.rocket_number || senderProfile?.upay_number || senderProfile?.dbbl_number || "");
+  const [number, setNumber] = useState("");
   const [anonymous, setAnonymous] = useState(false);
   const [scheduledAt, setScheduledAt] = useState("");
 
@@ -117,13 +113,19 @@ export function SendKhamForm({ senderId, senderProfile }: { senderId: string, se
 
   async function sendCard(e: React.FormEvent) {
     e.preventDefault();
-    if (!selectedUser || !message || !number) return;
+    if (!selectedUser || !message) return;
     setSending(true);
 
     const supabase = createClient();
     const slug = Math.random().toString(36).substring(2, 10);
 
-    const { error } = await supabase.from("khams").insert({
+    console.log("DIAGNOSTIC - Sending Kham:", {
+      sender_id: senderId,
+      receiver_id: selectedUser.id,
+      slug
+    });
+
+    const { data: insertResult, error } = await supabase.from("khams").insert({
       sender_id: senderId,
       receiver_id: selectedUser.id,
       receiver_name: selectedUser.full_name || selectedUser.username,
@@ -134,10 +136,10 @@ export function SendKhamForm({ senderId, senderProfile }: { senderId: string, se
       anonymous,
       scheduled_at: scheduledAt || null,
       slug
-    });
+    }).select();
 
     if (error) {
-      console.error("Supabase Error:", error);
+      console.error("Supabase Insertion Error:", error);
       showToast("Operation failed: " + (error.message || "Unknown error"), "error");
       setSending(false);
       return;
@@ -181,11 +183,11 @@ export function SendKhamForm({ senderId, senderProfile }: { senderId: string, se
               <label className="block text-sm font-medium">Platform</label>
               <select value={platform} onChange={e => {
                 setPlatform(e.target.value);
-                if (e.target.value === 'bKash') setNumber(senderProfile?.bkash_number || "");
-                else if (e.target.value === 'Nagad') setNumber(senderProfile?.nagad_number || "");
-                else if (e.target.value === 'Rocket') setNumber(senderProfile?.rocket_number || "");
-                else if (e.target.value === 'Upay') setNumber(senderProfile?.upay_number || "");
-                else if (e.target.value === 'DBBL') setNumber(senderProfile?.dbbl_number || "");
+                if (e.target.value.startsWith('custom-')) {
+                  const idx = parseInt(e.target.value.split('-')[1]);
+                  const pm = (senderProfile as any).payment_methods[idx];
+                  setNumber(pm.number);
+                }
                 else setNumber("");
               }} className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-2">
                 <option>bKash</option>
@@ -193,11 +195,19 @@ export function SendKhamForm({ senderId, senderProfile }: { senderId: string, se
                 <option>Rocket</option>
                 <option>Upay</option>
                 <option>DBBL</option>
+                {(senderProfile as any)?.payment_methods?.length > 0 && (
+                  <optgroup label="Saved in Profile">
+                    {(senderProfile as any).payment_methods.map((pm: any, idx: number) => (
+                      <option key={idx} value={`custom-${idx}`}>{pm.provider} ({pm.label || pm.number})</option>
+                    ))}
+                  </optgroup>
+                )}
+                <option>Other</option>
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium">Number</label>
-              <input type="text" required value={number} onChange={e => setNumber(e.target.value)} className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-2" />
+              <label className="block text-sm font-medium">Number (Optional)</label>
+              <input type="text" value={number} onChange={e => setNumber(e.target.value)} className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-2" placeholder="e.g. 017..." />
             </div>
           </div>
 
@@ -236,7 +246,7 @@ export function SendKhamForm({ senderId, senderProfile }: { senderId: string, se
                     : platform === 'Rocket' ? 'bg-purple-50 text-purple-700 border-purple-200'
                       : platform === 'Upay' ? 'bg-blue-50 text-blue-700 border-blue-200'
                         : 'bg-gray-100 text-gray-800 border-gray-300'}`}>
-                {platform}: {number}
+                {platform}: {number || "Not shared"}
               </div>
             </div>
           </div>

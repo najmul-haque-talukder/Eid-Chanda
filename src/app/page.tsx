@@ -9,17 +9,25 @@ export default async function HomePage() {
   const { data: userData } = await supabase.auth.getUser();
   const user = userData?.user;
 
-  let profile = null;
+  let profile: any = null;
   if (user) {
-    try {
-      const { data } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
-      profile = data;
-    } catch (e) {
-      console.warn("Failed to fetch user profile:", e);
+    const { data } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .maybeSingle(); // Use maybeSingle to avoid errors if not found
+    profile = data;
+
+    if (!profile) {
+      const fallbackName = user.email?.split("@")[0] || "User";
+      const { data: newProfile } = await supabase.from("profiles").upsert({
+        id: user.id,
+        full_name: user.user_metadata?.full_name || fallbackName,
+        username: user.user_metadata?.username || (fallbackName + Math.floor(Math.random() * 1000)),
+        email: user.email,
+        avatar_url: user.user_metadata?.avatar_url
+      }).select().single();
+      profile = newProfile;
     }
   }
 
@@ -43,7 +51,7 @@ export default async function HomePage() {
     if (user) {
       const [sentKhams, receivedKhams] = await Promise.all([
         supabase.from("khams").select("id, delivered_at").eq("sender_id", user.id),
-        supabase.from("archive").select("kham_id").eq("user_id", user.id),
+        supabase.from("khams").select("id").eq("receiver_id", user.id),
       ]);
 
       userStats = {

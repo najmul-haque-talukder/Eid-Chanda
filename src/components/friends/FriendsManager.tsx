@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import NextImage from "next/image";
-import { useToast } from "@/components/ToastContext";
+import { useToast } from "@/lib/redux/ToastSync";
 
 export function FriendsManager({ currentUserId }: { currentUserId: string }) {
     const { showToast } = useToast();

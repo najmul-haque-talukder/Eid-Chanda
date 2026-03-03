@@ -1,12 +1,13 @@
 import type { Metadata, Viewport } from "next";
 import { Hind_Siliguri, Poppins } from "next/font/google";
 import "./globals.css";
-import { createClient } from "@/lib/supabase/server";
-import { ToastProvider } from "@/components/ToastContext";
-import { LanguageProvider } from "@/components/LanguageContext";
-import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
-import { DashboardRightSidebar } from "@/components/dashboard/DashboardRightSidebar";
 import { HeaderHider } from "@/components/layout/HeaderHider";
+import { PageTransitionProvider } from "@/components/layout/PageTransitionProvider";
+import { NotificationHandler } from "@/components/notifications/NotificationHandler";
+import { ReduxProvider } from "@/lib/redux/ReduxProvider";
+import { LanguageSync } from "@/lib/redux/LanguageSync";
+import { ToastSync } from "@/lib/redux/ToastSync";
+import { QueryProvider } from "@/components/providers/QueryProvider";
 
 const hindSiliguri = Hind_Siliguri({
   weight: ["300", "400", "500", "600", "700"],
@@ -42,13 +43,17 @@ export const metadata: Metadata = {
   },
 };
 
-import { PageTransitionProvider } from "@/components/layout/PageTransitionProvider";
+import { SocketProvider } from "@/lib/socket/SocketProvider";
+import { createClient } from "@/lib/supabase/server";
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
   return (
     <html
       lang="bn"
@@ -57,15 +62,22 @@ export default function RootLayout({
     >
       <head />
       <body className="font-sans min-h-screen bg-cream text-gray-900 overflow-x-hidden" suppressHydrationWarning>
-        <ToastProvider>
-          <LanguageProvider>
-            <PageTransitionProvider>
-              <DashboardWrapper>
-                {children}
-              </DashboardWrapper>
-            </PageTransitionProvider>
-          </LanguageProvider>
-        </ToastProvider>
+        <QueryProvider>
+          <ReduxProvider>
+            <LanguageSync>
+              <PageTransitionProvider>
+                <NotificationHandler>
+                  <SocketProvider userId={user?.id || null}>
+                    <DashboardWrapper>
+                      {children}
+                    </DashboardWrapper>
+                  </SocketProvider>
+                </NotificationHandler>
+                <ToastSync />
+              </PageTransitionProvider>
+            </LanguageSync>
+          </ReduxProvider>
+        </QueryProvider>
       </body>
     </html>
   );

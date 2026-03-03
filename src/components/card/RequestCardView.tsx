@@ -23,11 +23,7 @@ type ProfileProps = {
   full_name?: string | null;
   avatar_url?: string | null;
   card_quote?: string | null;
-  bkash_number?: string | null;
-  nagad_number?: string | null;
-  rocket_number?: string | null;
-  upay_number?: string | null;
-  dbbl_number?: string | null;
+  payment_methods?: any[] | null;
 };
 
 export function RequestCardView({ profile }: { profile: ProfileProps }) {
@@ -131,75 +127,45 @@ export function RequestCardView({ profile }: { profile: ProfileProps }) {
           </div>
 
           <div className="space-y-3">
-            {profile.bkash_number && (
-              <button onClick={() => copyToClipboard(profile.bkash_number!, 'bkash')} className="w-full flex items-center justify-between bg-pink-50/50 border border-pink-100 p-3 rounded-xl hover:bg-pink-100 transition-all relative overflow-hidden group">
-                <div className="flex items-center gap-3">
-                  <Banknote className="text-pink-600" size={18} />
-                  <span className="font-bold text-pink-700 text-sm">bKash</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="font-mono font-black text-pink-700">{profile.bkash_number}</span>
-                  {copiedType === 'bkash' ? <Check className="text-green-500" size={16} /> : <Copy className="text-pink-300 opacity-0 group-hover:opacity-100" size={16} />}
-                </div>
-                {copiedType === 'bkash' && <span className="absolute inset-0 bg-white/90 flex items-center justify-center font-bold text-green-700 text-xs tracking-widest uppercase">Copied!</span>}
-              </button>
-            )}
 
-            {profile.nagad_number && (
-              <button onClick={() => copyToClipboard(profile.nagad_number!, 'nagad')} className="w-full flex items-center justify-between bg-orange-50/50 border border-orange-100 p-3 rounded-xl hover:bg-orange-100 transition-all relative overflow-hidden group">
+            {profile.payment_methods?.map((pm, idx) => (
+              <button key={idx} onClick={() => copyToClipboard(pm.number, `pm-${idx}`)} className={`w-full flex items-center justify-between border p-3 rounded-xl transition-all relative overflow-hidden group 
+                ${pm.provider === 'bKash' ? 'bg-pink-50/50 border-pink-100 hover:bg-pink-100'
+                  : pm.provider === 'Nagad' ? 'bg-orange-50/50 border-orange-100 hover:bg-orange-100'
+                    : pm.provider === 'Rocket' ? 'bg-purple-50/50 border-purple-100 hover:bg-purple-100'
+                      : pm.provider === 'Upay' ? 'bg-blue-50/50 border-blue-100 hover:bg-blue-100'
+                        : pm.provider === 'DBBL' ? 'bg-emerald-50/50 border-emerald-100 hover:bg-emerald-100'
+                          : 'bg-gray-50/50 border-gray-100 hover:bg-gray-100'}`}>
                 <div className="flex items-center gap-3">
-                  <Banknote className="text-orange-600" size={18} />
-                  <span className="font-bold text-orange-700 text-sm">Nagad</span>
+                  <Banknote className={`
+                    ${pm.provider === 'bKash' ? 'text-pink-600'
+                      : pm.provider === 'Nagad' ? 'text-orange-600'
+                        : pm.provider === 'Rocket' ? 'text-purple-600'
+                          : pm.provider === 'Upay' ? 'text-blue-600'
+                            : 'text-gray-600'}`} size={18} />
+                  <span className={`font-bold text-sm
+                    ${pm.provider === 'bKash' ? 'text-pink-700'
+                      : pm.provider === 'Nagad' ? 'text-orange-700'
+                        : pm.provider === 'Rocket' ? 'text-purple-700'
+                          : pm.provider === 'Upay' ? 'text-blue-700'
+                            : 'text-gray-700'}`}>
+                    {pm.provider} {pm.label ? `(${pm.label})` : ''}
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="font-mono font-black text-orange-700">{profile.nagad_number}</span>
-                  {copiedType === 'nagad' ? <Check className="text-green-500" size={16} /> : <Copy className="text-orange-300 opacity-0 group-hover:opacity-100" size={16} />}
+                  <span className={`font-mono font-black 
+                    ${pm.provider === 'bKash' ? 'text-pink-700'
+                      : pm.provider === 'Nagad' ? 'text-orange-700'
+                        : pm.provider === 'Rocket' ? 'text-purple-700'
+                          : pm.provider === 'Upay' ? 'text-blue-700'
+                            : 'text-gray-700'}`}>
+                    {pm.number}
+                  </span>
+                  {copiedType === `pm-${idx}` ? <Check className="text-green-500" size={16} /> : <Copy className="opacity-0 group-hover:opacity-100 text-gray-300" size={16} />}
                 </div>
-                {copiedType === 'nagad' && <span className="absolute inset-0 bg-white/90 flex items-center justify-center font-bold text-green-700 text-xs tracking-widest uppercase">Copied!</span>}
+                {copiedType === `pm-${idx}` && <span className="absolute inset-0 bg-white/90 flex items-center justify-center font-bold text-green-700 text-xs tracking-widest uppercase">Copied!</span>}
               </button>
-            )}
-
-            {profile.rocket_number && (
-              <button onClick={() => copyToClipboard(profile.rocket_number!, 'rocket')} className="w-full flex items-center justify-between bg-purple-50/50 border border-purple-100 p-3 rounded-xl hover:bg-purple-100 transition-all relative overflow-hidden group">
-                <div className="flex items-center gap-3">
-                  <Banknote className="text-purple-600" size={18} />
-                  <span className="font-bold text-purple-700 text-sm">Rocket</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="font-mono font-black text-purple-700">{profile.rocket_number}</span>
-                  {copiedType === 'rocket' ? <Check className="text-green-500" size={16} /> : <Copy className="text-purple-300 opacity-0 group-hover:opacity-100" size={16} />}
-                </div>
-                {copiedType === 'rocket' && <span className="absolute inset-0 bg-white/90 flex items-center justify-center font-bold text-green-700 text-xs tracking-widest uppercase">Copied!</span>}
-              </button>
-            )}
-
-            {profile.upay_number && (
-              <button onClick={() => copyToClipboard(profile.upay_number!, 'upay')} className="w-full flex items-center justify-between bg-blue-50/50 border border-blue-100 p-3 rounded-xl hover:bg-blue-100 transition-all relative overflow-hidden group">
-                <div className="flex items-center gap-3">
-                  <Banknote className="text-blue-600" size={18} />
-                  <span className="font-bold text-blue-700 text-sm">Upay</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="font-mono font-black text-blue-700">{profile.upay_number}</span>
-                  {copiedType === 'upay' ? <Check className="text-green-500" size={16} /> : <Copy className="text-blue-300 opacity-0 group-hover:opacity-100" size={16} />}
-                </div>
-                {copiedType === 'upay' && <span className="absolute inset-0 bg-white/90 flex items-center justify-center font-bold text-green-700 text-xs tracking-widest uppercase">Copied!</span>}
-              </button>
-            )}
-
-            {profile.dbbl_number && (
-              <button onClick={() => copyToClipboard(profile.dbbl_number!, 'dbbl')} className="w-full flex items-center justify-between bg-emerald-50/50 border border-emerald-100 p-3 rounded-xl hover:bg-emerald-100 transition-all relative overflow-hidden group">
-                <div className="flex items-center gap-3">
-                  <Building2 className="text-emerald-600" size={18} />
-                  <span className="font-bold text-emerald-700 text-sm">DBBL / Nexus</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="font-mono font-black text-emerald-700">{profile.dbbl_number}</span>
-                  {copiedType === 'dbbl' ? <Check className="text-green-500" size={16} /> : <Copy className="text-emerald-300 opacity-0 group-hover:opacity-100" size={16} />}
-                </div>
-                {copiedType === 'dbbl' && <span className="absolute inset-0 bg-white/90 flex items-center justify-center font-bold text-green-700 text-xs tracking-widest uppercase">Copied!</span>}
-              </button>
-            )}
+            ))}
           </div>
         </div>
       </div>

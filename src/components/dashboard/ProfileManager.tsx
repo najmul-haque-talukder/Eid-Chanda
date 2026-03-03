@@ -19,10 +19,13 @@ import {
   Facebook,
   MessageCircle,
   ExternalLink,
-  TriangleAlert
+  TriangleAlert,
+  Plus,
+  Trash2
 } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
-import { useToast } from "@/components/ToastContext";
+import { useToast } from "@/lib/redux/ToastSync";
+import { useLanguage } from "@/lib/redux/LanguageSync";
 
 type Profile = {
   id: string;
@@ -30,11 +33,7 @@ type Profile = {
   full_name: string | null;
   avatar_url: string | null;
   card_quote: string | null;
-  bkash_number?: string | null;
-  nagad_number?: string | null;
-  rocket_number?: string | null;
-  upay_number?: string | null;
-  dbbl_number?: string | null;
+  payment_methods?: any[] | null;
   email?: string | null;
 };
 
@@ -47,6 +46,7 @@ export function ProfileManager({
 }) {
   const router = useRouter();
   const { showToast } = useToast();
+  const { t } = useLanguage();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Auth UI States
@@ -67,11 +67,21 @@ export function ProfileManager({
   const [username, setUsername] = useState(initialProfile?.username || "");
   const [avatarUrl, setAvatarUrl] = useState(initialProfile?.avatar_url || "");
   const [cardQuote, setCardQuote] = useState(initialProfile?.card_quote || "");
-  const [bkash, setBkash] = useState(initialProfile?.bkash_number || "");
-  const [nagad, setNagad] = useState(initialProfile?.nagad_number || "");
-  const [rocket, setRocket] = useState(initialProfile?.rocket_number || "");
-  const [upay, setUpay] = useState(initialProfile?.upay_number || "");
-  const [dbbl, setDbbl] = useState(initialProfile?.dbbl_number || "");
+  const [paymentMethods, setPaymentMethods] = useState<any[]>(initialProfile?.payment_methods || []);
+
+  const addPaymentMethod = () => {
+    setPaymentMethods([...paymentMethods, { provider: "bKash", number: "", label: "" }]);
+  };
+
+  const updatePaymentMethod = (index: number, field: string, value: string) => {
+    const updated = [...paymentMethods];
+    updated[index] = { ...updated[index], [field]: value };
+    setPaymentMethods(updated);
+  };
+
+  const removePaymentMethod = (index: number) => {
+    setPaymentMethods(paymentMethods.filter((_, i) => i !== index));
+  };
 
   const [saving, setSaving] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
@@ -150,11 +160,7 @@ export function ProfileManager({
       username: newUsername,
       avatar_url: avatarUrl,
       card_quote: cardQuote,
-      bkash_number: bkash,
-      nagad_number: nagad,
-      rocket_number: rocket,
-      upay_number: upay,
-      dbbl_number: dbbl,
+      payment_methods: paymentMethods,
       updated_at: new Date().toISOString(),
     });
 
@@ -428,74 +434,80 @@ export function ProfileManager({
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {/* bKash */}
-          <div className="space-y-1">
-            <label className="text-xs font-bold text-pink-600 flex items-center gap-1 uppercase ml-1">
-              <Smartphone size={14} /> bKash
-            </label>
-            <input
-              type="text"
-              value={bkash}
-              onChange={(e) => setBkash(e.target.value)}
-              className="w-full px-5 py-3 rounded-2xl border-2 border-pink-100 focus:border-pink-500 outline-none font-bold text-sm"
-              placeholder="Number"
-            />
+        <div className="space-y-4">
+          <div className="flex items-center justify-between border-b border-cream pb-2">
+            <h4 className="text-sm font-black text-gray-500 uppercase tracking-widest">Payment Numbers</h4>
+            <button
+              type="button"
+              onClick={addPaymentMethod}
+              className="flex items-center gap-1 text-xs font-black text-primary hover:bg-primary/5 px-3 py-1.5 rounded-xl border-2 border-primary/10 transition-all"
+            >
+              <Plus size={14} /> Add New
+            </button>
           </div>
-          {/* Nagad */}
-          <div className="space-y-1">
-            <label className="text-xs font-bold text-orange-600 flex items-center gap-1 uppercase ml-1">
-              <Smartphone size={14} /> Nagad
-            </label>
-            <input
-              type="text"
-              value={nagad}
-              onChange={(e) => setNagad(e.target.value)}
-              className="w-full px-5 py-3 rounded-2xl border-2 border-orange-100 focus:border-orange-500 outline-none font-bold text-sm"
-              placeholder="Number"
-            />
+
+          {paymentMethods.length === 0 && (
+            <p className="text-xs text-gray-400 italic text-center py-4 bg-cream/10 rounded-2xl border-2 border-dashed border-cream">
+              No numbers added. Click "Add New" to add bKash, Nagad, etc.
+            </p>
+          )}
+
+          <div className="space-y-3">
+            {paymentMethods.map((pm, idx) => (
+              <div key={idx} className="grid grid-cols-12 gap-2 items-end animate-in fade-in slide-in-from-top-1 duration-200">
+                <div className="col-span-3 space-y-1">
+                  <label className="text-[10px] font-bold text-gray-400 uppercase ml-1">Platform</label>
+                  <select
+                    value={pm.provider}
+                    onChange={(e) => updatePaymentMethod(idx, "provider", e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-xl bg-cream/30 border-2 border-cream focus:border-primary outline-none font-bold text-xs"
+                  >
+                    <option>bKash</option>
+                    <option>Nagad</option>
+                    <option>Rocket</option>
+                    <option>Upay</option>
+                    <option>DBBL</option>
+                    <option>Other</option>
+                  </select>
+                </div>
+                <div className="col-span-5 space-y-1">
+                  <label className="text-[10px] font-bold text-gray-400 uppercase ml-1">Number</label>
+                  <input
+                    type="text"
+                    value={pm.number}
+                    onChange={(e) => updatePaymentMethod(idx, "number", e.target.value)}
+                    placeholder="017..."
+                    className="w-full px-3 py-2.5 rounded-xl bg-cream/30 border-2 border-cream focus:border-primary outline-none font-bold text-xs"
+                  />
+                </div>
+                <div className="col-span-3 space-y-1">
+                  <label className="text-[10px] font-bold text-gray-400 uppercase ml-1">Label (Optional)</label>
+                  <input
+                    type="text"
+                    value={pm.label || ""}
+                    onChange={(e) => updatePaymentMethod(idx, "label", e.target.value)}
+                    placeholder="Personal"
+                    className="w-full px-3 py-2.5 rounded-xl bg-cream/30 border-2 border-cream focus:border-primary outline-none font-bold text-xs"
+                  />
+                </div>
+                <div className="col-span-1 pb-1">
+                  <button
+                    type="button"
+                    onClick={() => removePaymentMethod(idx)}
+                    className="w-9 h-9 rounded-xl bg-red-50 text-red-400 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
-          {/* Rocket */}
-          <div className="space-y-1">
-            <label className="text-xs font-bold text-purple-600 flex items-center gap-1 uppercase ml-1">
-              <Smartphone size={14} /> Rocket
-            </label>
-            <input
-              type="text"
-              value={rocket}
-              onChange={(e) => setRocket(e.target.value)}
-              className="w-full px-5 py-3 rounded-2xl border-2 border-purple-100 focus:border-purple-500 outline-none font-bold text-sm"
-              placeholder="Number"
-            />
-          </div>
-          {/* Upay */}
-          <div className="space-y-1">
-            <label className="text-xs font-bold text-blue-600 flex items-center gap-1 uppercase ml-1">
-              <Smartphone size={14} /> Upay
-            </label>
-            <input
-              type="text"
-              value={upay}
-              onChange={(e) => setUpay(e.target.value)}
-              className="w-full px-5 py-3 rounded-2xl border-2 border-blue-100 focus:border-blue-500 outline-none font-bold text-sm"
-              placeholder="Number"
-            />
-          </div>
-          {/* DBBL */}
-          <div className="space-y-1 lg:col-span-2">
-            <label className="text-xs font-bold text-red-600 flex items-center gap-1 uppercase ml-1">
-              <Building2 size={14} /> Dutch Bangla Bank
-              / Nexus
-            </label>
-            <input
-              type="text"
-              value={dbbl}
-              onChange={(e) => setDbbl(e.target.value)}
-              className="w-full px-5 py-3 rounded-2xl border-2 border-red-100 focus:border-red-500 outline-none font-bold text-sm"
-              placeholder="Account Number"
-            />
-          </div>
+
+          <p className="text-[10px] text-gray-400 font-medium italic mt-2">
+            * These numbers will be shown on your public card for others to send Salami.
+          </p>
         </div>
+
 
         <button
           type="submit"
